@@ -1,0 +1,28 @@
+# Local dev / single-machine deploy.
+# For Pi: run wrangler standalone with host networking (see infra/pi/).
+#
+# Usage:
+#   WRANGLED_AUTH_TOKEN=devtoken docker compose up --build
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "8500:8500"
+    environment:
+      - WRANGLED_AUTH_TOKEN=${WRANGLED_AUTH_TOKEN:-}
+
+  wrangler:
+    build:
+      context: .
+      dockerfile: apps/wrangler/Dockerfile
+    # host networking so mDNS/WLED discovery works on the LAN
+    network_mode: host
+    environment:
+      - WRANGLED_API_URL=ws://127.0.0.1:8500/ws
+      - WRANGLED_AUTH_TOKEN=${WRANGLED_AUTH_TOKEN:-}
+      - WRANGLED_WRANGLER_ID=${WRANGLED_WRANGLER_ID:-docker-wrangler}
+    depends_on:
+      - api

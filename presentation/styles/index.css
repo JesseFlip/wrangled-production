@@ -1,0 +1,7 @@
+/* Hide only the autocomplete "Go to slide" popup and nav buttons */
+.autocomplete-list,
+.autocomplete-list-wrapper,
+.slidev-nav-controls,
+.slidev-icon-btn {
+  display: none !important;
+}

@@ -1,0 +1,21 @@
+# Production deploy for the api hub.
+# Run on the server behind Caddy (wrangled.lumbergh.dev).
+#
+# Usage:
+#   cd infra/compose
+#   docker compose up -d
+#   docker compose logs -f
+
+services:
+  api:
+    image: ghcr.io/jesseflip/wrangled-api:latest
+    container_name: wrangled-api
+    ports:
+      - "8500:8500"
+    environment:
+      - WRANGLED_AUTH_TOKEN=${WRANGLED_AUTH_TOKEN:?set WRANGLED_AUTH_TOKEN}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID:-}
+    volumes:
+      - ./data:/app/apps/api/data    # TinyDB moderation state persists here
+    restart: unless-stopped

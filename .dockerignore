@@ -1,0 +1,11 @@
+.git
+.github
+.claude
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/.ruff_cache
+**/.pytest_cache
+**/.mypy_cache
+docs

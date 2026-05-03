@@ -1,0 +1,30 @@
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["ALL"]
+ignore = [
+    "D",       # pydocstyle: opt in later
+    "ANN101",  # self annotation redundant
+    "ANN102",  # cls annotation redundant
+    "COM812",  # trailing comma — conflicts with formatter
+    "ISC001",  # implicit string concat — conflicts with formatter
+    "TD002",   # allow TODOs without author
+    "TD003",   # allow TODOs without issue link
+    "FIX002",  # allow TODO comments in code
+]
+
+[lint.mccabe]
+max-complexity = 15
+
+[lint.per-file-ignores]
+"**/tests/**" = ["S101", "PLR2004", "ANN", "D"]
+"**/__main__.py" = ["T201"]       # print allowed in CLI entry
+"**/cli.py" = ["T201"]            # print allowed in CLI
+
+[lint.pydocstyle]
+convention = "google"
+
+[format]
+quote-style = "double"
+indent-style = "space"

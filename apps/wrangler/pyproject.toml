@@ -1,0 +1,46 @@
+[project]
+name = "wrangler"
+version = "0.1.0"
+description = "WrangLED Pi-side agent: WLED discovery + control"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "zeroconf>=0.132",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "wrangled-contracts",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "websockets>=12.0",
+]
+
+[project.scripts]
+wrangler = "wrangler.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wrangler"]
+
+[tool.uv.sources]
+wrangled-contracts = { path = "../../packages/contracts", editable = true }
+
+[tool.ruff]
+extend = "../../ruff.toml"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "live: hits a real WLED on the LAN (opt-in, skipped by default)",
+]
+addopts = "-m 'not live'"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.5",
+]
