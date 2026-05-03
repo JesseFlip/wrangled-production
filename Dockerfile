@@ -1,21 +1,23 @@
-# Use a lightweight Python image
 FROM python:3.11-slim
 
-# Set working directory to project root
 WORKDIR /app
 
-# Copy the local packages and requirements
-COPY packages/contracts ./packages/contracts
-COPY apps/api ./apps/api
+# Copy all local packages/apps for dependency resolution
+COPY packages/ /app/packages/
+COPY apps/ /app/apps/
 
-# Install dependencies
-# We use -e for local paths to ensure they link correctly
+# Install dependencies in order
+# 1. Core contracts
 RUN pip install --no-cache-dir ./packages/contracts
+
+# 2. Wrangler (contains the schedule data the API needs)
+RUN pip install --no-cache-dir ./apps/wrangler
+
+# 3. The API Hub itself
 RUN pip install --no-cache-dir ./apps/api
 
-# Expose the port App Runner will use
+# App Runner/ECS usually expects port 8080 or 80
 EXPOSE 8080
 
-# Start the FastAPI hub
-# We bind to 0.0.0.0 so AWS can reach the container
-CMD ["uvicorn", "api.server.app:app", "--host", "0.0.0.0", "--port", "8080"]
+# Run the FastAPI server
+CMD ["uvicorn", "api.server:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]
