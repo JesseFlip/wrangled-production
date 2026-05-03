@@ -166,25 +166,6 @@ async def _post_one(
     retries: int = 2,
 ) -> PushResult:
     url = f"http://{device.ip}/json/state"
-<<<<<<< HEAD
-    try:
-        response = await client.post(
-            url,
-            content=json.dumps(body, ensure_ascii=False).encode(),
-            headers={"content-type": "application/json"},
-            timeout=timeout,
-        )
-    except httpx.TimeoutException as exc:
-        logger.debug("push %s: timeout: %s", device.ip, exc)
-        return PushResult(ok=False, error=f"timeout: {exc}")
-    except httpx.HTTPError as exc:
-        logger.debug("push %s: transport error: %s", device.ip, exc)
-        return PushResult(ok=False, error=str(exc))
-
-    if response.status_code != httpx.codes.OK:
-        return PushResult(ok=False, status=response.status_code, error=response.text[:200])
-    return PushResult(ok=True, status=response.status_code)
-=======
     last_result: PushResult | None = None
     for attempt in range(1 + retries):
         try:
@@ -207,7 +188,7 @@ async def _post_one(
         if attempt < retries:
             await asyncio.sleep(0.3)
     return last_result  # type: ignore[return-value]
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
 
 
 async def push_command(

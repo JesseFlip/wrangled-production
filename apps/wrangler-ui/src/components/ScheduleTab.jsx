@@ -39,11 +39,8 @@ export default function ScheduleTab({ onSend }) {
       kind: 'text',
       text,
       color: { r: 255, g: 255, b: 255 },
-<<<<<<< HEAD
-      speed: 20
-=======
       speed: 225
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
     });
   };
 

@@ -5,18 +5,13 @@ import ColorTab from './components/ColorTab.jsx';
 import EffectTab from './components/EffectTab.jsx';
 import TextTab from './components/TextTab.jsx';
 import PresetTab from './components/PresetTab.jsx';
-import EmojiTab from './components/EmojiTab.jsx';
 import ScheduleTab from './components/ScheduleTab.jsx';
 import BrightnessSlider from './components/BrightnessSlider.jsx';
 import CyberView from './views/CyberView.jsx';
 import { api } from './api.js';
 
 const STORAGE_KEY = 'wrangler.selectedMac';
-<<<<<<< HEAD
 const TABS = ['Cyber', 'Color', 'Effect', 'Text', 'Preset', 'Schedule'];
-=======
-const TABS = ['Color', 'Effect', 'Text', 'Preset', 'Emoji', 'Schedule'];
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
 
 export default function App() {
   const [devices, setDevices] = useState([]);
@@ -102,7 +97,6 @@ export default function App() {
             {tab === 'Effect' && <EffectTab onSend={sendCommand} />}
             {tab === 'Text' && <TextTab onSend={sendCommand} />}
             {tab === 'Preset' && <PresetTab onSend={sendCommand} />}
-            {tab === 'Emoji' && <EmojiTab onSend={sendCommand} />}
             {tab === 'Schedule' && <ScheduleTab onSend={sendCommand} />}
           </div>
         </main>

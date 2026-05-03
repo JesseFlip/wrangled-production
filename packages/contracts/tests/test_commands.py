@@ -174,31 +174,11 @@ def test_preset_name_is_constrained() -> None:
 
 
 def test_effect_fx_id_covers_all_effect_names() -> None:
-<<<<<<< HEAD
-    expected = {
-        "solid",
-        "blink",
-        "breathe",
-        "rainbow",
-        "fire",
-        "sparkle",
-        "fireworks",
-        "matrix",
-        "pride",
-        "chase",
-        "noise",
-        # PyTexas preset pack additions
-        "plasma",
-        "metaballs",
-        "wavingcell",
-    }
-    assert set(EFFECT_FX_ID.keys()) == expected
-=======
     effects = set(EFFECT_FX_ID.keys())
     # Must include originals + Jesse's PyTexas additions
     assert effects >= {"solid", "fire", "rainbow", "matrix", "plasma", "blink", "police"}
     assert len(effects) >= 19
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
 
 
 def test_effect_fx_id_values_are_wled_ids() -> None:
@@ -247,17 +227,6 @@ def test_command_from_emoji_strips_whitespace() -> None:
 
 
 def test_presets_cover_expected_names() -> None:
-<<<<<<< HEAD
-    expected = {
-        # Originals
-        "pytexas", "party", "chill",
-        # PyTexas preset pack
-        "snake_attack", "code_fire", "lone_star", "applause",
-        "crowd_hype", "howdy", "love_it", "pride_ride", "sine_wave",
-        "discord_alert", "late_night",
-    }
-    assert set(PRESETS.keys()) == expected
-=======
     presets = set(PRESETS.keys())
     expected = {
         "pytexas", "party", "chill",
@@ -265,7 +234,7 @@ def test_presets_cover_expected_names() -> None:
     }
     assert presets >= expected
     assert len(presets) >= 32
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
 
 
 def test_pytexas_preset_exists() -> None:

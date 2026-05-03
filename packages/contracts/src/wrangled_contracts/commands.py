@@ -224,11 +224,7 @@ class TextCommand(BaseModel):
     kind: Literal["text"] = "text"
     text: str = Field(max_length=200, min_length=1)
     color: RGB | None = None
-<<<<<<< HEAD
-    speed: int = Field(default=20, ge=0, le=240)
-=======
     speed: int = Field(default=225, ge=0, le=240)
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
     intensity: int | None = Field(default=None, ge=0, le=255)
     brightness: int | None = Field(default=None, ge=0, le=200)
     start: int | None = None
@@ -363,11 +359,8 @@ PRESETS: dict[PresetName, list[Command]] = {
          TextCommand(
             text="PyTexas 2026",
             color=RGB(r=255, g=255, b=255),
-<<<<<<< HEAD
-            speed=22, # Medium speed
-=======
             speed=225,
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
         ),
     ],
     # 👋 Howdy — Standard PyTexas Greeting
@@ -375,26 +368,12 @@ PRESETS: dict[PresetName, list[Command]] = {
         TextCommand(
             text="Welcome to PyTexas 2026",
             color=RGB(r=255, g=122, b=0),
-<<<<<<< HEAD
-            speed=25, # Medium speed
-=======
             speed=225,
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
         ),
     ],
     # ☕ Breaktime
     "breaktime": [
-<<<<<<< HEAD
-        TextCommand(text="Breaktime", color=RGB(r=0, g=200, b=255), speed=18), # Short text -> Slow
-    ],
-    # 🤝 Networking
-    "networking": [
-        TextCommand(text="PyTexas Networking Event", color=RGB(r=200, g=100, b=255), speed=28), # Medium-long
-    ],
-    # 🤝 Be Respectful
-    "respectful": [
-        TextCommand(text="Be Respectful!", color=RGB(r=255, g=255, b=0), speed=18), # Short
-=======
         TextCommand(text="Breaktime", color=RGB(r=0, g=200, b=255), speed=225),
     ],
     # 🤝 Networking
@@ -404,31 +383,12 @@ PRESETS: dict[PresetName, list[Command]] = {
     # 🤝 Be Respectful
     "respectful": [
         TextCommand(text="Be Respectful!", color=RGB(r=255, g=255, b=0), speed=225),
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
     ],
 
     # ── Moderator Pack ──────────────────────────────────────────────────────
     # 📵 Silence Phones
     "silent_phones": [
-<<<<<<< HEAD
-        TextCommand(text="Silence your phones!", color=RGB(r=255, g=0, b=0), speed=25),
-    ],
-    # 🎙️ Talk Starting
-    "talk_soon": [
-        TextCommand(text="Next talk starting soon", color=RGB(r=0, g=255, b=0), speed=25),
-    ],
-    # 🎒 Lost & Found
-    "found_item": [
-        TextCommand(text="Found Item - See Registration", color=RGB(r=255, g=255, b=255), speed=30),
-    ],
-    # ❓ Q&A Session
-    "qa_session": [
-        TextCommand(text="Q&A Session", color=RGB(r=255, g=200, b=0), speed=20),
-    ],
-    # ⏱️ 5 Minutes Remaining
-    "five_min": [
-        TextCommand(text="5 Minutes Remaining", color=RGB(r=255, g=165, b=0), speed=25),
-=======
         TextCommand(text="Silence your phones!", color=RGB(r=255, g=0, b=0), speed=225),
     ],
     # 🎙️ Talk Starting
@@ -446,7 +406,7 @@ PRESETS: dict[PresetName, list[Command]] = {
     # ⏱️ 5 Minutes Remaining
     "five_min": [
         TextCommand(text="5 Minutes Remaining", color=RGB(r=255, g=165, b=0), speed=225),
->>>>>>> 5334bf1b39749b1aaf4a365d2ecea784df29a418
+
     ],
     "party": [EffectCommand(name="rainbow", speed=240, brightness=200)],
     "chill": [
