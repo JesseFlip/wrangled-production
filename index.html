@@ -902,9 +902,9 @@
 
   const PARTY = {
     honorees: [
-      { slot: 1, name: 'Ryan',  message: 'Happy 42 Ryan — the answer to everything', color: C.coral },
-      { slot: 2, name: 'Irene', message: '生日快樂 Irene · Made with love',            color: C.teal  },
-      { slot: 3, name: 'Emily', message: 'Happy Birthday Emily — set sail!',          color: C.gold  }
+      { slot: 1, name: 'Ryan',  message: 'Happy 42 Ryan — the answer to everything', matrixMessage: 'Happy 42 Ryan — the answer to everything', color: C.coral },
+      { slot: 2, name: 'Irene', message: '生日快樂 Irene · Made with love',            matrixMessage: 'Sheng ri kuai le Irene · Made with love', color: C.teal  },
+      { slot: 3, name: 'Emily', message: 'Happy Birthday Emily — set sail!',          matrixMessage: 'Happy Birthday Emily — set sail!',          color: C.gold  }
     ],
     scenes: [
       { id: 'welcome', label: '✦ Welcome guests', sub: 'warm coral pulse',
@@ -958,13 +958,13 @@
     languages: [
       { honoree: 'Ryan',  lang: 'EN',   text: 'Happy birthday Ryan!',     color: C.coral },
       { honoree: 'Ryan',  lang: 'ES',   text: '¡Feliz cumpleaños Ryan!',  color: C.coral },
-      { honoree: 'Ryan',  lang: '中文', text: 'Ryan 生日快樂!',           color: C.coral },
+      { honoree: 'Ryan',  lang: '中文', text: 'Ryan 生日快樂!',           matrixText: 'Ryan Sheng ri kuai le!',   color: C.coral },
       { honoree: 'Irene', lang: 'EN',   text: 'Happy birthday Irene!',    color: C.teal  },
       { honoree: 'Irene', lang: 'ES',   text: '¡Feliz cumpleaños Irene!', color: C.teal  },
-      { honoree: 'Irene', lang: '中文', text: '生日快樂 Irene!',           color: C.teal  },
+      { honoree: 'Irene', lang: '中文', text: '生日快樂 Irene!',           matrixText: 'Sheng ri kuai le Irene!',  color: C.teal  },
       { honoree: 'Emily', lang: 'EN',   text: 'Happy birthday Emily!',    color: C.gold  },
       { honoree: 'Emily', lang: 'ES',   text: '¡Feliz cumpleaños Emily!', color: C.gold  },
-      { honoree: 'Emily', lang: '中文', text: '生日快樂 Emily!',           color: C.gold  }
+      { honoree: 'Emily', lang: '中文', text: '生日快樂 Emily!',           matrixText: 'Sheng ri kuai le Emily!',  color: C.gold  }
     ],
     facts: {
       Ryan: {
@@ -988,7 +988,7 @@
           'Irene crafts the things we get to keep forever.',
           'Wherever Irene is, the room is warmer.',
           'Irene: maker of meals, memories, and Emily.',
-          '謝謝 Irene — 妳是我們的驕傲'
+          'Xiexie Irene — you are our pride'
         ]
       },
       Emily: {
@@ -1068,10 +1068,11 @@
     PARTY.honorees.forEach(h => {
       const btn = document.createElement('button');
       btn.className = `btn accent honoree-${h.slot}`;
+      const matrixMsg = (h.matrixMessage || h.message);
       btn.innerHTML = `${h.name}<span class="sub">${h.message}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 200 },
-        { kind: 'text', text: h.message, color: h.color, speed: 220 }
+        { kind: 'text', text: matrixMsg, color: h.color, speed: 220 }
       ], `${h.name} Spotlight`, 'party');
       root.appendChild(btn);
     });
@@ -1101,7 +1102,7 @@
       btn.innerHTML = `${l.honoree} · ${l.lang}<span class="sub">${l.text}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
-        { kind: 'text', text: l.text, color: l.color, speed: 220 }
+        { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: 220 }
       ], `${l.honoree} (${l.lang})`, 'party');
       root.appendChild(btn);
     });
@@ -1149,7 +1150,7 @@
     const samples = {
       en: 'Wishing you the best birthday yet!',
       es: '¡Te deseo el mejor cumpleaños de todos!',
-      zh: '祝你生日快樂，心想事成！'
+      zh: 'Sheng ri kuai le — wishing you a wonderful year ahead!'
     };
     el.value = samples[code] || '';
     updateCharCount();
@@ -1225,7 +1226,7 @@
     const l = PARTY.languages[Math.floor(Math.random() * PARTY.languages.length)];
     runCommands([
       { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
-      { kind: 'text', text: l.text, color: l.color, speed: 220 }
+      { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: 220 }
     ], `Surprise: ${l.honoree}`, 'party');
   }
 
