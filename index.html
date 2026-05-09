@@ -486,7 +486,7 @@
       <div class="title">Wrang<span class="accent">LED</span></div>
       <div class="subtitle">For the LED matrix at <span id="hostLabel">pytexas-pi</span></div>
     </div>
-    <div class="conn" id="conn" data-state="connecting" title="Click to edit API URL">
+    <div class="conn" id="conn" data-state="connecting" title="Click to rescan for WLED devices" onclick="rescan()" style="cursor: pointer;">
       <span class="conn-dot"></span>
       <span id="connText">connecting&hellip;</span>
     </div>
@@ -522,8 +522,8 @@
         <h2>Brightness &amp; speed</h2>
         <div class="slider-row">
           <label for="brightness">Brightness</label>
-          <input type="range" id="brightness" min="0" max="255" value="180">
-          <span class="val" id="brightnessVal">180</span>
+          <input type="range" id="brightness" min="0" max="200" value="150">
+          <span class="val" id="brightnessVal">150</span>
         </div>
         <div class="slider-row">
           <label for="speed">Effect speed</label>
@@ -538,6 +538,12 @@
       </section>
 
       <section>
+        <h2>Quick presets</h2>
+        <p class="hint">Pre-baked scenes from the wrangler's preset library — multi-step sequences with text + effects.</p>
+        <div class="grid tight" id="presetButtons"></div>
+      </section>
+
+      <section>
         <h2>Scrolling text</h2>
         <p class="hint">Sends to the matrix as a marquee in the current color.</p>
         <div class="text-row">
@@ -549,8 +555,8 @@
       <section>
         <h2>Power</h2>
         <div class="grid tight">
-          <button class="btn accent" onclick="sendCommand({kind:'power', state:'on'})">◉ Power on</button>
-          <button class="btn" onclick="sendCommand({kind:'power', state:'off'})">○ Power off</button>
+          <button class="btn accent" onclick="sendCommand({kind:'power', on:true})">◉ Power on</button>
+          <button class="btn" onclick="sendCommand({kind:'power', on:false})">○ Power off</button>
           <button class="btn" onclick="runScene('reset')">↺ Reset</button>
         </div>
       </section>
@@ -653,6 +659,10 @@
     return location.origin;
   })();
 
+  // Auto-discovered on connect — populated by pingApi()
+  let currentMac = null;
+  let currentDevice = null;
+
   /* ============================================================
      COLORS — the canonical palette used across scenes
      ============================================================ */
@@ -698,9 +708,22 @@
     { id: 'sparkle',   label: 'Sparkle'   },
     { id: 'fireworks', label: 'Fireworks' },
     { id: 'rainbow',   label: 'Rainbow'   },
-    { id: 'fade',      label: 'Fade'      },
+    { id: 'plasma',    label: 'Plasma'    },
     { id: 'chase',     label: 'Chase'     },
-    { id: 'scan',      label: 'Scan'      }
+    { id: 'sweep',     label: 'Sweep'     }
+  ];
+
+  // Curated subset of the wrangler's built-in presets (full list in
+  // ~/wrangled/packages/contracts/src/wrangled_contracts/commands.py)
+  const PRESETS = [
+    { id: 'party',         label: '🎉 Party'        },
+    { id: 'chill',         label: '🌊 Chill'        },
+    { id: 'love_it',       label: '❤ Love it'       },
+    { id: 'howdy',         label: '👋 Howdy'        },
+    { id: 'pytexas',       label: '🤠 PyTexas'      },
+    { id: 'discord_alert', label: '⚡ Alert'         },
+    { id: 'snake_attack',  label: '🐍 Snake'        },
+    { id: 'zen',           label: '🧘 Zen'          }
   ];
 
   /* ============================================================
@@ -729,7 +752,7 @@
         ] },
       { id: 'celebration', label: '✦ Celebration', sub: 'rainbow fireworks',
         commands: [
-          { kind: 'effect', name: 'fireworks', color: C.yellow, speed: 220, brightness: 230 }
+          { kind: 'effect', name: 'fireworks', color: C.yellow, speed: 220, brightness: 200 }
         ] },
       { id: 'calm', label: '◐ Calm', sub: 'slow blue breathe',
         commands: [
@@ -737,7 +760,7 @@
         ] },
       { id: 'motivation', label: '▲ Motivation', sub: 'orange sparkle + text',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.coral, speed: 200, brightness: 220 },
+          { kind: 'effect', name: 'sparkle', color: C.coral, speed: 200, brightness: 200 },
           { kind: 'text', text: 'You got this', color: C.coral, speed: 220 }
         ] },
       { id: 'wyattWalk', label: '🦴 Wyatt walk', sub: 'sparkly green',
@@ -773,7 +796,7 @@
         ] },
       { id: 'treatTime', label: '🥩 Treat time!',
         commands: [
-          { kind: 'effect', name: 'fireworks', color: C.warm, speed: 200, brightness: 220 },
+          { kind: 'effect', name: 'fireworks', color: C.warm, speed: 200, brightness: 200 },
           { kind: 'text', text: 'Treat time Wyatt!', color: C.warm, speed: 220 }
         ] },
       { id: 'goodBoy', label: '🐾 Good boy!',
@@ -805,12 +828,12 @@
         ] },
       { id: 'trio', label: '◉ Trio rotation', sub: 'coral → teal → mustard',
         commands: [
-          { kind: 'effect', name: 'fade', color: C.coral, speed: 180, brightness: 220 },
+          { kind: 'effect', name: 'plasma', color: C.coral, speed: 180, brightness: 200 },
           { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: 220 }
         ] },
       { id: 'happyBirthday', label: '★ Happy Birthday!', sub: 'celebratory pulse',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.gold, speed: 200, brightness: 230 },
+          { kind: 'effect', name: 'sparkle', color: C.gold, speed: 200, brightness: 200 },
           { kind: 'text', text: 'Happy Birthday!', color: C.gold, speed: 220 }
         ] },
       { id: 'candles', label: '🕯 Cake & candles', sub: 'warm flicker',
@@ -825,17 +848,17 @@
         ] },
       { id: 'hotpot', label: '🍲 Hot pot ready', sub: 'warm amber simmer',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.coral, speed: 100, brightness: 220 },
+          { kind: 'effect', name: 'breathe', color: C.coral, speed: 100, brightness: 200 },
           { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: 220 }
         ] },
       { id: 'photo', label: '📸 Photo time', sub: 'bright white flash',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.white, speed: 240, brightness: 255 },
+          { kind: 'effect', name: 'sparkle', color: C.white, speed: 240, brightness: 200 },
           { kind: 'text', text: 'Photo time!', color: C.white, speed: 240 }
         ] },
       { id: 'dance', label: '♫ Dance floor', sub: 'rainbow cycle',
         commands: [
-          { kind: 'effect', name: 'rainbow', color: C.purple, speed: 230, brightness: 230 }
+          { kind: 'effect', name: 'rainbow', color: C.purple, speed: 230, brightness: 200 }
         ] },
       { id: 'windDown', label: '☾ Wind down', sub: 'soft purple breathe',
         commands: [
@@ -864,7 +887,7 @@
     const off = document.createElement('button');
     off.className = 'swatch off';
     off.textContent = 'OFF';
-    off.onclick = () => sendCommand({ kind: 'power', state: 'off' });
+    off.onclick = () => sendCommand({ kind: 'power', on: false });
     root.appendChild(off);
   }
 
@@ -880,6 +903,21 @@
         speed: getSpeed(),
         brightness: getBrightness()
       });
+      root.appendChild(btn);
+    });
+  }
+
+  function renderPresets() {
+    const root = document.getElementById('presetButtons');
+    root.innerHTML = '';
+    PRESETS.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.textContent = p.label;
+      btn.onclick = () => {
+        sendCommand({ kind: 'preset', name: p.id });
+        toast(p.label);
+      };
       root.appendChild(btn);
     });
   }
@@ -946,7 +984,7 @@
       const msg = h.message.replace('[name]', h.name);
       btn.innerHTML = `${h.name}<span class="sub">${msg}</span>`;
       btn.onclick = () => runCommands([
-        { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 220 },
+        { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 200 },
         { kind: 'text', text: msg, color: h.color, speed: 220 }
       ], `${h.name}: ${msg}`, 'party');
       root.appendChild(btn);
@@ -970,21 +1008,33 @@
      The wrangler exposes endpoints for color, effect, text, power.
      ============================================================ */
   async function sendCommand(cmd) {
+    if (!currentMac) {
+      log('✗ no device connected — click the status pill to rescan', 'err');
+      toast('No WLED device connected', true);
+      return null;
+    }
     const summary = `${cmd.kind}${cmd.name ? ':'+cmd.name : ''}${cmd.text ? ' "'+cmd.text+'"' : ''}`;
     log(`→ ${summary}`, 'cmd');
     try {
-      const res = await fetch(`${apiUrl}/api/command`, {
+      const res = await fetch(`${apiUrl}/api/devices/${currentMac}/commands`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cmd)
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      log(`✓ sent`, 'ok');
-      setConn('ok', `connected to ${displayHost()}`);
-      return await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${errText ? ' ' + errText.slice(0, 100) : ''}`);
+      }
+      const result = await res.json();
+      if (result.ok) {
+        log(`✓ sent (${result.status})`, 'ok');
+      } else {
+        log(`✗ ${result.error || 'failed'}`, 'err');
+      }
+      return result;
     } catch (err) {
       log(`✗ ${err.message}`, 'err');
-      setConn('err', `error: ${err.message}`);
+      setConn('err', `error: ${err.message.slice(0, 40)}`);
       return null;
     }
   }
@@ -1000,7 +1050,7 @@
   function runScene(name) {
     if (name === 'reset') {
       runCommands([
-        { kind: 'power', state: 'on' },
+        { kind: 'power', on: true },
         { kind: 'effect', name: 'solid', color: C.white, brightness: 100 }
       ], 'reset', null);
     }
@@ -1089,14 +1139,36 @@
   async function pingApi() {
     setConn('connecting', 'connecting…');
     try {
-      const res = await fetch(`${apiUrl}/api/health`, { method: 'GET' });
-      if (res.ok) {
-        setConn('ok', `connected to ${displayHost()}`);
-      } else {
-        setConn('err', `unreachable (HTTP ${res.status})`);
+      const res = await fetch(`${apiUrl}/api/devices`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const devices = data.devices || [];
+      if (devices.length === 0) {
+        currentMac = null;
+        currentDevice = null;
+        setConn('err', 'no devices — click to rescan');
+        return;
       }
+      currentDevice = devices[0];
+      currentMac = currentDevice.mac;
+      setConn('ok', `${currentDevice.name} · ${currentDevice.ip}`);
     } catch (err) {
-      setConn('err', `unreachable`);
+      currentMac = null;
+      setConn('err', 'unreachable — click to retry');
+    }
+  }
+
+  async function rescan() {
+    setConn('connecting', 'rescanning network…');
+    toast('Scanning for WLED devices...');
+    try {
+      const res = await fetch(`${apiUrl}/api/scan`, { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await pingApi();
+      if (currentMac) toast(`Found: ${currentDevice.name}`);
+    } catch (err) {
+      setConn('err', 'scan failed');
+      toast('Scan failed: ' + err.message, true);
     }
   }
 
@@ -1135,6 +1207,7 @@
     // Render all dynamic content
     renderSwatches();
     renderEffects();
+    renderPresets();
     renderMoods();
     renderAffirmations();
     renderQuickSends();
