@@ -9,8 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     /* ========================================================================
-       THEME — three accent palettes, one per tab
-       Edit these values to recolor the whole app
+       THEME — four accent palettes, one per tab
        ======================================================================== */
     :root {
       --bg: #0a0a0f;
@@ -33,6 +32,10 @@
       --t-1: #f97316;
       --t-2: #14b8a6;
       --t-3: #eab308;
+
+      /* Wishes Wall tab — purple/rose */
+      --wish-1: #a855f7;
+      --wish-2: #f43f5e;
 
       --ok: #22c55e;
       --warn: #f59e0b;
@@ -73,6 +76,11 @@
         radial-gradient(circle at 50% 95%, rgba(20, 184, 166, 0.08), transparent 40%),
         radial-gradient(circle at 90% 15%, rgba(234, 179, 8, 0.08), transparent 40%);
     }
+    body[data-tab="wishes"]::before {
+      background:
+        radial-gradient(circle at 20% 10%, rgba(168, 85, 247, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(244, 63, 94, 0.10), transparent 45%);
+    }
 
     main, header, footer { position: relative; z-index: 1; }
 
@@ -106,6 +114,12 @@
     }
     body[data-tab="party"] .title .accent {
       background: linear-gradient(90deg, var(--t-1), var(--t-2), var(--t-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    body[data-tab="wishes"] .title .accent {
+      background: linear-gradient(90deg, var(--wish-1), var(--wish-2));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -175,6 +189,7 @@
     body[data-tab="wrangled"] .tab[data-tab="wrangled"] { border-bottom-color: var(--w-1); }
     body[data-tab="personal"] .tab[data-tab="personal"] { border-bottom-color: var(--p-1); }
     body[data-tab="party"] .tab[data-tab="party"] { border-bottom-color: var(--t-1); }
+    body[data-tab="wishes"] .tab[data-tab="wishes"] { border-bottom-color: var(--wish-1); }
 
     /* MAIN */
     main {
@@ -250,7 +265,7 @@
       font-weight: 400;
     }
 
-    /* Tab-flavored button accents (left-edge color bar that slides in on hover) */
+    /* Tab-flavored button accents */
     .btn.accent::before {
       content: '';
       position: absolute;
@@ -265,6 +280,7 @@
     .btn.accent { --accent: var(--w-1); }
     body[data-tab="personal"] .btn.accent { --accent: var(--p-1); }
     body[data-tab="party"]    .btn.accent { --accent: var(--t-1); }
+    body[data-tab="wishes"]   .btn.accent { --accent: var(--wish-1); }
 
     /* Honoree cards have stronger color tint */
     .btn.honoree-1 { --accent: var(--t-1); border-color: rgba(249, 115, 22, 0.4); }
@@ -346,6 +362,7 @@
     }
     body[data-tab="personal"] .text-row input[type="text"]:focus { border-color: var(--p-1); }
     body[data-tab="party"]    .text-row input[type="text"]:focus { border-color: var(--t-1); }
+    body[data-tab="wishes"]   .text-row input[type="text"]:focus { border-color: var(--wish-1); }
     .text-row button {
       background: linear-gradient(135deg, var(--w-1), var(--w-2));
       color: white;
@@ -359,6 +376,69 @@
     }
     body[data-tab="personal"] .text-row button { background: linear-gradient(135deg, var(--p-1), var(--p-2)); }
     body[data-tab="party"]    .text-row button { background: linear-gradient(135deg, var(--t-1), var(--t-3)); }
+    body[data-tab="wishes"]   .text-row button { background: linear-gradient(135deg, var(--wish-1), var(--wish-2)); }
+
+    /* WISHES WALL STYLES */
+    .wish-form { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+    .wish-form input[type="text"], .wish-form textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      padding: 14px 16px; border-radius: 10px; font-family: inherit; font-size: 1rem; margin-bottom: 12px; resize: vertical;
+    }
+    .wish-form textarea { min-height: 80px; font-size: 1.05rem; }
+    .wish-form input:focus, .wish-form textarea:focus { outline: none; border-color: #a855f7; }
+    .char-count { text-align: right; font-size: 0.78rem; color: var(--muted); margin: -8px 0 12px; font-family: 'JetBrains Mono', monospace; }
+    .char-count.warn { color: var(--warn); }
+    .quick-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .quick-row .lbl { font-size: 0.78rem; color: var(--muted); align-self: center; margin-right: 4px; }
+    .chip {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: inherit;
+      font-size: 0.82rem; transition: all 0.15s;
+    }
+    .chip:hover { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+    .chip.lang { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+    .send-big {
+      width: 100%; background: linear-gradient(135deg, #a855f7, #f43f5e); color: white; border: none;
+      padding: 18px; border-radius: 12px; cursor: pointer; font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600; font-size: 1.1rem; transition: all 0.15s; margin-top: 6px;
+    }
+    .send-big:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); }
+    .send-big:disabled { opacity: 0.5; cursor: not-allowed; }
+    .now-scrolling {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(244, 63, 94, 0.1));
+      border: 1px solid rgba(168, 85, 247, 0.4); padding: 14px 18px; border-radius: 12px;
+      margin-top: 14px; font-size: 0.92rem; display: none;
+    }
+    .now-scrolling .pulse {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #a855f7; margin-right: 8px; vertical-align: middle;
+      animation: livePulse 1.4s infinite ease-in-out;
+    }
+    @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .now-scrolling .label {
+      font-size: 0.74rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; display: block;
+    }
+    .wish-history { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px; max-height: 400px; overflow-y: auto; }
+    .wish-history .empty { color: var(--muted); text-align: center; padding: 24px; font-size: 0.9rem; }
+    .wish-history-item { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .wish-history-item:last-child { border-bottom: none; }
+    .wish-history-item .text { flex: 1; word-break: break-word; }
+    .wish-history-item .name { font-size: 0.78rem; color: var(--muted); margin-bottom: 2px; }
+    .wish-history-item button { background: none; border: none; color: var(--hint); font-size: 0.78rem; cursor: pointer; padding: 4px 8px; }
+    .wish-history-item button:hover { color: var(--err); }
+
+    /* REACTIONS & LANGUAGES STYLES */
+    .reactions { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .reaction-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 16px 8px; border-radius: 12px; cursor: pointer;
+      font-family: 'Bricolage Grotesque', sans-serif; font-size: 0.92rem; font-weight: 500;
+      text-align: center; transition: all 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .reaction-btn .glyph { font-size: 1.6rem; line-height: 1; }
+    .reaction-btn:hover { transform: translateY(-2px) scale(1.02); border-color: var(--text); background: var(--surface-2); }
 
     /* LOG (fixed bottom drawer) */
     .log-wrap {
@@ -402,6 +482,7 @@
     .log .entry .err { color: var(--err); }
     .log .entry .heart { color: var(--p-1); }
     .log .entry .party { color: var(--t-1); }
+    .log .entry .wish  { color: var(--wish-1); }
 
     /* TOAST */
     .toast {
@@ -429,6 +510,7 @@
     .toast.err  { border-left-color: var(--err); }
     .toast.love { border-left-color: var(--p-1); }
     .toast.party{ border-left-color: var(--t-1); }
+    .toast.wishes{ border-left-color: var(--wish-1); }
 
     /* Settings */
     .settings {
@@ -451,25 +533,6 @@
       border-radius: 8px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.82rem;
-    }
-
-    /* Honoree edit hint */
-    .edit-hint {
-      background: var(--surface);
-      border: 1px dashed var(--border);
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-    .edit-hint code {
-      background: var(--bg);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text);
-      font-size: 0.78rem;
     }
 
     @media (max-width: 600px) {
@@ -496,6 +559,7 @@
     <button class="tab active" data-tab="wrangled">WrangLED</button>
     <button class="tab" data-tab="personal">Jesse &amp; Dorys</button>
     <button class="tab" data-tab="party">Triple Birthday</button>
+    <button class="tab" data-tab="wishes">Wishes Wall</button>
   </nav>
 
   <main>
@@ -600,15 +664,9 @@
     <!-- ================================================================== -->
     <div class="pane" data-pane="party">
 
-      <div class="edit-hint">
-        Edit the three honoree names + signature messages by changing
-        <code>PARTY.honorees</code> in this file's
-        <code>&lt;script&gt;</code> block — then commit and push from Antigravity.
-      </div>
-
       <section>
         <h2>Honoree spotlights</h2>
-        <p class="hint">Each honoree gets a signature color (coral, teal, mustard) and a personal scroll.</p>
+        <p class="hint">Each honoree gets a signature color and a personal scroll.</p>
         <div class="grid wide" id="honorees"></div>
       </section>
 
@@ -619,11 +677,76 @@
       </section>
 
       <section>
+        <h2>Reactions</h2>
+        <p class="hint">Mid-toast room participation. Tap and the matrix shouts back.</p>
+        <div class="reactions" id="reactions"></div>
+      </section>
+
+      <section>
+        <h2>Wishes around the world</h2>
+        <p class="hint">Multi-lingual love for each honoree. Plus a 🎲 surprise option.</p>
+        <div class="grid wide" id="languages"></div>
+        <button class="btn accent" style="width: 100%; margin-top: 10px; text-align: center; padding: 18px;" onclick="sendRandomLanguage()">🎲 Surprise</button>
+      </section>
+
+      <section>
+        <h2>Honor them</h2>
+        <p class="hint">Personal one-liners written for each of them. Tap for a random fun fact.</p>
+        <div class="grid wide" id="funFacts"></div>
+      </section>
+
+      <section>
         <h2>Custom toast</h2>
         <p class="hint">Type a celebratory line and send it to the matrix in gold.</p>
         <div class="text-row">
           <input type="text" id="partyText" placeholder="¡Salud y feliz cumpleaños!">
           <button onclick="sendPartyText()">Send toast</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- TAB 4: WISHES WALL — guest participation                           -->
+    <!-- ================================================================== -->
+    <div class="pane" data-pane="wishes">
+      <section>
+        <h2>Send a birthday wish to the matrix</h2>
+        <p class="hint">Whatever you type lights up across the LED panels for everyone to see. Pass your phone around — let everyone send one.</p>
+        
+        <div class="wish-form">
+          <input type="text" id="wishName" placeholder="Your name (optional)" maxlength="40">
+          <textarea id="wishText" placeholder="Your wish for the birthday trio..." maxlength="180" rows="3"></textarea>
+          <div class="char-count" id="wishCharCount">0 / 180</div>
+
+          <div class="quick-row">
+            <span class="lbl">Wishing:</span>
+            <button class="chip" onclick="prefillHonoree('Ryan')">Ryan</button>
+            <button class="chip" onclick="prefillHonoree('Irene')">Irene</button>
+            <button class="chip" onclick="prefillHonoree('Emily')">Emily</button>
+            <button class="chip" onclick="prefillHonoree('Ryan, Irene, and Emily')">All three</button>
+          </div>
+
+          <div class="quick-row">
+            <span class="lbl">Language:</span>
+            <button class="chip lang" onclick="prefillLang('en')">EN</button>
+            <button class="chip lang" onclick="prefillLang('es')">ES</button>
+            <button class="chip lang" onclick="prefillLang('zh')">中文</button>
+          </div>
+
+          <button class="send-big" id="wishSendBtn" onclick="sendWish()">✨ Send wish to the matrix ✨</button>
+
+          <div class="now-scrolling" id="nowScrolling">
+            <span class="label">Currently on the matrix</span>
+            <span class="pulse"></span> <span id="scrollingText">...</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Your wishes tonight</h2>
+        <p class="hint">A record of what you've sent from this device. Only you can see this.</p>
+        <div class="wish-history" id="wishHistory">
+          <!-- history items render here -->
         </div>
       </section>
     </div>
@@ -646,10 +769,7 @@
 
   <script>
   /* ============================================================
-     CONFIG — auto-detect API URL based on how the page is served
-     If served from the Pi (http://100.80.148.20:8501), use same origin.
-     If opened as a local file (file://...), fall back to Tailscale IP.
-     User can override via the "API URL" field on the WrangLED tab.
+     CONFIG — auto-detect API URL
      ============================================================ */
   const FALLBACK_API = 'http://100.80.148.20:8501';
   let apiUrl = (function() {
@@ -659,12 +779,11 @@
     return location.origin;
   })();
 
-  // Auto-discovered on connect — populated by pingApi()
   let currentMac = null;
   let currentDevice = null;
 
   /* ============================================================
-     COLORS — the canonical palette used across scenes
+     COLORS — canonical palette
      ============================================================ */
   const C = {
     red:    { r: 220, g: 38,  b: 38  },
@@ -686,8 +805,11 @@
     candle: { r: 255, g: 140, b: 60  }
   };
 
+  const WISH_COLORS = [C.gold, C.coral, C.teal, C.rose, C.purple, C.pink];
+  let colorIdx = 0;
+
   /* ============================================================
-     WRANGLED TAB DATA — colors, effects
+     DATA OBJECTS
      ============================================================ */
   const SWATCHES = [
     { name: 'red',    color: C.red    },
@@ -702,6 +824,7 @@
     { name: 'rose',   color: C.rose   },
     { name: 'white',  color: C.white  }
   ];
+  
   const EFFECTS = [
     { id: 'solid',     label: 'Solid'     },
     { id: 'breathe',   label: 'Breathe'   },
@@ -713,8 +836,6 @@
     { id: 'sweep',     label: 'Sweep'     }
   ];
 
-  // Curated subset of the wrangler's built-in presets (full list in
-  // ~/wrangled/packages/contracts/src/wrangled_contracts/commands.py)
   const PRESETS = [
     { id: 'party',         label: '🎉 Party'        },
     { id: 'chill',         label: '🌊 Chill'        },
@@ -726,10 +847,6 @@
     { id: 'zen',           label: '🧘 Zen'          }
   ];
 
-  /* ============================================================
-     PERSONAL TAB DATA — Jesse & Dorys scenes
-     Edit these freely — `commands` is an array run in sequence.
-     ============================================================ */
   const PERSONAL = {
     moods: [
       { id: 'goodMorning', label: '☀ Good morning', sub: 'warm amber breathe',
@@ -757,47 +874,23 @@
       { id: 'calm', label: '◐ Calm', sub: 'slow blue breathe',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.blue, speed: 40, brightness: 150 }
-        ] },
-      { id: 'motivation', label: '▲ Motivation', sub: 'orange sparkle + text',
-        commands: [
-          { kind: 'effect', name: 'sparkle', color: C.coral, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'You got this', color: C.coral, speed: 220 }
-        ] },
-      { id: 'wyattWalk', label: '🦴 Wyatt walk', sub: 'sparkly green',
-        commands: [
-          { kind: 'effect', name: 'sparkle', color: C.green, speed: 180, brightness: 200 },
-          { kind: 'text', text: 'Walk time Wyatt!', color: C.green, speed: 220 }
         ] }
     ],
-
     affirmations: [
       { es: 'Dorys, eres mi todo',           en: 'You are my everything' },
       { es: 'Estoy muy orgulloso de ti',     en: "I'm so proud of you" },
       { es: 'Tu fuerza me inspira',          en: 'Your strength inspires me' },
-      { es: 'Escogería amarte otra vez',     en: "I'd choose to love you again" },
-      { es: 'Eres mi compañera',             en: 'You are my partner' },
-      { es: 'Te amo profundamente',          en: 'I love you deeply' },
-      { es: 'Cada día contigo es un regalo', en: 'Every day with you is a gift' },
       { es: 'Mi corazón es tuyo',            en: 'My heart is yours' }
     ],
-
     quickSends: [
       { label: 'Te amo',         text: 'Te amo' },
-      { label: 'Buenas noches',  text: 'Buenas noches' },
-      { label: 'Cada día mejor', text: 'Cada día mejor' },
-      { label: 'I believe in you', text: 'I believe in you' }
+      { label: 'Buenas noches',  text: 'Buenas noches' }
     ],
-
     wyatt: [
       { id: 'walkTime', label: '🦴 Walk time!',
         commands: [
           { kind: 'effect', name: 'sparkle', color: C.cyan, speed: 200, brightness: 200 },
           { kind: 'text', text: 'Walk time Wyatt!', color: C.cyan, speed: 225 }
-        ] },
-      { id: 'treatTime', label: '🥩 Treat time!',
-        commands: [
-          { kind: 'effect', name: 'fireworks', color: C.warm, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'Treat time Wyatt!', color: C.warm, speed: 220 }
         ] },
       { id: 'goodBoy', label: '🐾 Good boy!',
         commands: [
@@ -807,26 +900,19 @@
     ]
   };
 
-  /* ============================================================
-     PARTY TAB DATA — Triple Birthday Party
-     EDIT THE THREE HONOREE NAMES BELOW once you know who the trio is.
-     Each honoree has a signature color (coral / teal / mustard) and
-     a custom message that scrolls when you hit their button.
-     ============================================================ */
   const PARTY = {
     honorees: [
-      { slot: 1, name: 'Honoree 1', message: '¡Feliz cumpleaños [name]!', color: C.coral },
-      { slot: 2, name: 'Honoree 2', message: '¡Feliz cumpleaños [name]!', color: C.teal  },
-      { slot: 3, name: 'Honoree 3', message: '¡Feliz cumpleaños [name]!', color: C.gold  }
+      { slot: 1, name: 'Ryan',  message: 'Happy 42 Ryan — the answer to everything', color: C.coral },
+      { slot: 2, name: 'Irene', message: '生日快樂 Irene · Made with love',            color: C.teal  },
+      { slot: 3, name: 'Emily', message: 'Happy Birthday Emily — set sail!',          color: C.gold  }
     ],
-
     scenes: [
       { id: 'welcome', label: '✦ Welcome guests', sub: 'warm coral pulse',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.coral, speed: 90, brightness: 200 },
           { kind: 'text', text: '¡Bienvenidos!', color: C.coral, speed: 220 }
         ] },
-      { id: 'trio', label: '◉ Trio rotation', sub: 'coral → teal → mustard',
+      { id: 'trio', label: '◉ Trio rotation', sub: 'plasma trio colors',
         commands: [
           { kind: 'effect', name: 'plasma', color: C.coral, speed: 180, brightness: 200 },
           { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: 220 }
@@ -851,11 +937,6 @@
           { kind: 'effect', name: 'breathe', color: C.coral, speed: 100, brightness: 200 },
           { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: 220 }
         ] },
-      { id: 'photo', label: '📸 Photo time', sub: 'bright white flash',
-        commands: [
-          { kind: 'effect', name: 'sparkle', color: C.white, speed: 240, brightness: 200 },
-          { kind: 'text', text: 'Photo time!', color: C.white, speed: 240 }
-        ] },
       { id: 'dance', label: '♫ Dance floor', sub: 'rainbow cycle',
         commands: [
           { kind: 'effect', name: 'rainbow', color: C.purple, speed: 230, brightness: 200 }
@@ -865,14 +946,69 @@
           { kind: 'effect', name: 'breathe', color: C.purple, speed: 50, brightness: 130 },
           { kind: 'text', text: 'Good night, friends', color: C.purple, speed: 200 }
         ] }
-    ]
+    ],
+    reactions: [
+      { id: 'cheers',  glyph: '🥂', label: 'Cheers!', text: '¡Salud! Cheers!',   color: C.gold,   effect: 'breathe',   speed: 100 },
+      { id: 'bravo',   glyph: '👏', label: 'Bravo!',  text: 'Bravo!',            color: C.coral,  effect: 'sparkle',   speed: 200 },
+      { id: 'aww',     glyph: '❤',  label: 'Aww',    text: 'Awwww ♥',           color: C.rose,   effect: 'breathe',   speed: 80  },
+      { id: 'encore',  glyph: '🎵', label: 'Encore!', text: 'Encore! Encore!',   color: C.purple, effect: 'sparkle',   speed: 220 },
+      { id: 'speech',  glyph: '🎤', label: 'Speech!', text: 'Speech! Speech!',   color: C.teal,   effect: 'sparkle',   speed: 200 },
+      { id: 'hype',    glyph: '🎂', label: 'Hype!',  text: '★ Birthday Hype ★', color: C.yellow, effect: 'fireworks', speed: 220 }
+    ],
+    languages: [
+      { honoree: 'Ryan',  lang: 'EN',   text: 'Happy birthday Ryan!',     color: C.coral },
+      { honoree: 'Ryan',  lang: 'ES',   text: '¡Feliz cumpleaños Ryan!',  color: C.coral },
+      { honoree: 'Ryan',  lang: '中文', text: 'Ryan 生日快樂!',           color: C.coral },
+      { honoree: 'Irene', lang: 'EN',   text: 'Happy birthday Irene!',    color: C.teal  },
+      { honoree: 'Irene', lang: 'ES',   text: '¡Feliz cumpleaños Irene!', color: C.teal  },
+      { honoree: 'Irene', lang: '中文', text: '生日快樂 Irene!',           color: C.teal  },
+      { honoree: 'Emily', lang: 'EN',   text: 'Happy birthday Emily!',    color: C.gold  },
+      { honoree: 'Emily', lang: 'ES',   text: '¡Feliz cumpleaños Emily!', color: C.gold  },
+      { honoree: 'Emily', lang: '中文', text: '生日快樂 Emily!',           color: C.gold  }
+    ],
+    facts: {
+      Ryan: {
+        color: C.coral,
+        lines: [
+          'Ryan is the answer to life, the universe, and everything. Today he turns 42.',
+          'Cheers to Ryan — 42 and still committing on Fridays.',
+          "Ryan's IT team would follow him into a server room fire.",
+          "Forty-two looks good on Ryan. Don't panic.",
+          'In every multiverse, Ryan is the VP we deserve.',
+          'Ryan: zero dropped tickets, infinite vibes.',
+          'Hitchhikers, your guide turns 42 tonight.'
+        ]
+      },
+      Irene: {
+        color: C.teal,
+        lines: [
+          'Irene makes everything she touches better.',
+          'Irene — thoughtful, talented, the reason this kitchen smells incredible.',
+          'Cheers to Irene, who turns ingredients into love.',
+          'Irene crafts the things we get to keep forever.',
+          'Wherever Irene is, the room is warmer.',
+          'Irene: maker of meals, memories, and Emily.',
+          '謝謝 Irene — 妳是我們的驕傲'
+        ]
+      },
+      Emily: {
+        color: C.gold,
+        lines: [
+          "Emily's heart set sail for the Grand Line a long time ago.",
+          'Emily — King of the Pirates in training.',
+          'The One Piece is the friends we made along the way. Emily already gets it.',
+          'Emily knows every Strawhat by heart. Tonight we celebrate the captain.',
+          'Set sail Emily — your nakama are right here.',
+          "Anime taught Emily what Hollywood couldn't.",
+          'Today the Going Merry sails for cake.'
+        ]
+      }
+    }
   };
 
   /* ============================================================
-     RENDER — generate buttons from data
+     RENDER ENGINE
      ============================================================ */
-  function rgbCss(c) { return `rgb(${c.r}, ${c.g}, ${c.b})`; }
-
   function renderSwatches() {
     const root = document.getElementById('swatches');
     root.innerHTML = '';
@@ -880,8 +1016,7 @@
       const el = document.createElement('button');
       el.className = 'swatch';
       el.style.background = rgbCss(s.color);
-      el.title = s.name;
-      el.onclick = () => setColor(s.color);
+      el.onclick = () => sendCommand({ kind: 'color', color: s.color, brightness: getBrightness() });
       root.appendChild(el);
     });
     const off = document.createElement('button');
@@ -898,11 +1033,7 @@
       const btn = document.createElement('button');
       btn.className = 'btn accent';
       btn.textContent = e.label;
-      btn.onclick = () => sendCommand({
-        kind: 'effect', name: e.id,
-        speed: getSpeed(),
-        brightness: getBrightness()
-      });
+      btn.onclick = () => sendCommand({ kind: 'effect', name: e.id, speed: getSpeed(), brightness: getBrightness() });
       root.appendChild(btn);
     });
   }
@@ -914,10 +1045,7 @@
       const btn = document.createElement('button');
       btn.className = 'btn accent';
       btn.textContent = p.label;
-      btn.onclick = () => {
-        sendCommand({ kind: 'preset', name: p.id });
-        toast(p.label);
-      };
+      btn.onclick = () => sendCommand({ kind: 'preset', name: p.id });
       root.appendChild(btn);
     });
   }
@@ -934,107 +1062,194 @@
     });
   }
 
-  function renderAffirmations() {
-    const root = document.getElementById('affirmations');
-    root.innerHTML = '';
-    PERSONAL.affirmations.forEach(a => {
-      const btn = document.createElement('button');
-      btn.className = 'btn accent';
-      btn.innerHTML = `${a.es}<span class="sub">${a.en}</span>`;
-      btn.onclick = () => runCommands([
-        { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
-        { kind: 'text', text: a.es, color: C.soft, speed: 220 }
-      ], a.es, 'love');
-      root.appendChild(btn);
-    });
-  }
-
-  function renderQuickSends() {
-    const root = document.getElementById('quickSends');
-    root.innerHTML = '';
-    PERSONAL.quickSends.forEach(q => {
-      const btn = document.createElement('button');
-      btn.className = 'btn accent';
-      btn.textContent = q.label;
-      btn.onclick = () => runCommands([
-        { kind: 'text', text: q.text, color: C.rose, speed: 220 }
-      ], q.text, 'love');
-      root.appendChild(btn);
-    });
-  }
-
-  function renderWyatt() {
-    const root = document.getElementById('wyattScenes');
-    root.innerHTML = '';
-    PERSONAL.wyatt.forEach(w => {
-      const btn = document.createElement('button');
-      btn.className = 'btn accent';
-      btn.textContent = w.label;
-      btn.onclick = () => runCommands(w.commands, w.label, 'love');
-      root.appendChild(btn);
-    });
-  }
-
   function renderHonorees() {
     const root = document.getElementById('honorees');
     root.innerHTML = '';
     PARTY.honorees.forEach(h => {
       const btn = document.createElement('button');
       btn.className = `btn accent honoree-${h.slot}`;
-      const msg = h.message.replace('[name]', h.name);
-      btn.innerHTML = `${h.name}<span class="sub">${msg}</span>`;
+      btn.innerHTML = `${h.name}<span class="sub">${h.message}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 200 },
-        { kind: 'text', text: msg, color: h.color, speed: 220 }
-      ], `${h.name}: ${msg}`, 'party');
+        { kind: 'text', text: h.message, color: h.color, speed: 220 }
+      ], `${h.name} Spotlight`, 'party');
       root.appendChild(btn);
     });
   }
 
-  function renderPartyScenes() {
-    const root = document.getElementById('partyScenes');
+  function renderReactions() {
+    const root = document.getElementById('reactions');
     root.innerHTML = '';
-    PARTY.scenes.forEach(s => {
+    PARTY.reactions.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'reaction-btn';
+      btn.innerHTML = `<span class="glyph">${r.glyph}</span><span>${r.label}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: r.effect, color: r.color, speed: r.speed, brightness: 200 },
+        { kind: 'text', text: r.text, color: r.color, speed: 220 }
+      ], r.label, 'party');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderLanguages() {
+    const root = document.getElementById('languages');
+    root.innerHTML = '';
+    PARTY.languages.forEach(l => {
       const btn = document.createElement('button');
       btn.className = 'btn accent';
-      btn.innerHTML = `${s.label}<span class="sub">${s.sub}</span>`;
-      btn.onclick = () => runCommands(s.commands, s.label, 'party');
+      btn.innerHTML = `${l.honoree} · ${l.lang}<span class="sub">${l.text}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
+        { kind: 'text', text: l.text, color: l.color, speed: 220 }
+      ], `${l.honoree} (${l.lang})`, 'party');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderFunFacts() {
+    const root = document.getElementById('funFacts');
+    root.innerHTML = '';
+    Object.keys(PARTY.facts).forEach((name, i) => {
+      const f = PARTY.facts[name];
+      const btn = document.createElement('button');
+      btn.className = `btn accent honoree-${i+1}`;
+      btn.innerHTML = `🎲 Random fact about ${name}<span class="sub">${f.lines.length} lines available</span>`;
+      btn.onclick = () => {
+        const line = f.lines[Math.floor(Math.random() * f.lines.length)];
+        runCommands([
+          { kind: 'effect', name: 'sparkle', color: f.color, speed: 180, brightness: 200 },
+          { kind: 'text', text: line, color: f.color, speed: 220 }
+        ], `Fact about ${name}`, 'party');
+      };
       root.appendChild(btn);
     });
   }
 
   /* ============================================================
-     COMMAND LAYER — talks to the wrangler API on the Pi
-     The wrangler exposes endpoints for color, effect, text, power.
+     WISHES WALL LOGIC
+     ============================================================ */
+  function updateCharCount() {
+    const el = document.getElementById('wishText');
+    const cnt = document.getElementById('wishCharCount');
+    const len = el.value.length;
+    cnt.textContent = `${len} / 180`;
+    cnt.classList.toggle('warn', len > 160);
+  }
+
+  function prefillHonoree(name) {
+    const el = document.getElementById('wishText');
+    el.value = `Happy birthday ${name}!`;
+    updateCharCount();
+    el.focus();
+  }
+
+  function prefillLang(code) {
+    const el = document.getElementById('wishText');
+    const samples = {
+      en: 'Wishing you the best birthday yet!',
+      es: '¡Te deseo el mejor cumpleaños de todos!',
+      zh: '祝你生日快樂，心想事成！'
+    };
+    el.value = samples[code] || '';
+    updateCharCount();
+    el.focus();
+  }
+
+  async function sendWish() {
+    const name = document.getElementById('wishName').value.trim();
+    const wish = document.getElementById('wishText').value.trim();
+    const btn = document.getElementById('wishSendBtn');
+    
+    if (!wish) { toast('Please write a wish!', true); return; }
+    
+    const fullText = name ? `${name}: ${wish}` : wish;
+    const finalMsg = fullText.slice(0, 180);
+    const color = WISH_COLORS[colorIdx % WISH_COLORS.length];
+    colorIdx++;
+
+    btn.disabled = true;
+    btn.textContent = '✨ Sending... ✨';
+
+    const result = await runCommands([
+      { kind: 'effect', name: 'breathe', color: color, speed: 100, brightness: 200 },
+      { kind: 'text', text: finalMsg, color: color, speed: 220 }
+    ], 'Wish sent!', 'wishes');
+
+    btn.disabled = false;
+    btn.textContent = '✨ Send wish to the matrix ✨';
+
+    // Save to history
+    let history = JSON.parse(localStorage.getItem('wishedHistory') || '[]');
+    history.unshift({ name, wish, id: Date.now() });
+    if (history.length > 25) history.pop();
+    localStorage.setItem('wishedHistory', JSON.stringify(history));
+    renderWishHistory();
+
+    // Reset UI
+    document.getElementById('wishText').value = '';
+    updateCharCount();
+    
+    const indicator = document.getElementById('nowScrolling');
+    document.getElementById('scrollingText').textContent = finalMsg;
+    indicator.style.display = 'block';
+    setTimeout(() => { indicator.style.display = 'none'; }, 30000);
+  }
+
+  function renderWishHistory() {
+    const root = document.getElementById('wishHistory');
+    const history = JSON.parse(localStorage.getItem('wishedHistory') || '[]');
+    if (history.length === 0) {
+      root.innerHTML = '<div class="empty">No wishes sent yet. Be the first.</div>';
+      return;
+    }
+    root.innerHTML = history.map(h => `
+      <div class="wish-history-item">
+        <div class="text">
+          ${h.name ? `<div class="name">${h.name}</div>` : ''}
+          ${h.wish}
+        </div>
+        <button onclick="deleteWish(${h.id})">×</button>
+      </div>
+    `).join('');
+  }
+
+  function deleteWish(id) {
+    let history = JSON.parse(localStorage.getItem('wishedHistory') || '[]');
+    history = history.filter(h => h.id !== id);
+    localStorage.setItem('wishedHistory', JSON.stringify(history));
+    renderWishHistory();
+  }
+
+  function sendRandomLanguage() {
+    const l = PARTY.languages[Math.floor(Math.random() * PARTY.languages.length)];
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
+      { kind: 'text', text: l.text, color: l.color, speed: 220 }
+    ], `Surprise: ${l.honoree}`, 'party');
+  }
+
+  /* ============================================================
+     API & UTILS
      ============================================================ */
   async function sendCommand(cmd) {
     if (!currentMac) {
-      log('✗ no device connected — click the status pill to rescan', 'err');
-      toast('No WLED device connected', true);
+      log('✗ no device connected', 'err');
+      toast('No device connected', true);
       return null;
     }
-    const summary = `${cmd.kind}${cmd.name ? ':'+cmd.name : ''}${cmd.text ? ' "'+cmd.text+'"' : ''}`;
-    log(`→ ${summary}`, 'cmd');
+    log(`→ ${cmd.kind}${cmd.name ? ':'+cmd.name : ''}`, 'cmd');
     try {
       const res = await fetch(`${apiUrl}/api/devices/${currentMac}/commands`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cmd)
       });
-      if (!res.ok) {
-        const errText = await res.text().catch(() => '');
-        throw new Error(`HTTP ${res.status}${errText ? ' ' + errText.slice(0, 100) : ''}`);
-      }
       const result = await res.json();
-      if (result.ok) {
-        log(`✓ sent (${result.status})`, 'ok');
-      } else {
-        log(`✗ ${result.error || 'failed'}`, 'err');
-      }
+      if (result.ok) log(`✓ sent`, 'ok'); else log(`✗ failed`, 'err');
       return result;
     } catch (err) {
       log(`✗ ${err.message}`, 'err');
-      setConn('err', `error: ${err.message.slice(0, 40)}`);
       return null;
     }
   }
@@ -1047,66 +1262,18 @@
     }
   }
 
-  function runScene(name) {
-    if (name === 'reset') {
-      runCommands([
-        { kind: 'power', on: true },
-        { kind: 'effect', name: 'solid', color: C.white, brightness: 100 }
-      ], 'reset', null);
-    }
-  }
-
-  function setColor(color) {
-    sendCommand({
-      kind: 'color',
-      color,
-      brightness: getBrightness()
-    });
-  }
-
-  function sendCustomText() {
-    const txt = document.getElementById('customText').value.trim();
-    if (!txt) return;
-    sendCommand({
-      kind: 'text', text: txt,
-      color: { r: 255, g: 255, b: 255 },
-      speed: getSpeed()
-    });
-  }
-
-  function sendPersonalText() {
-    const txt = document.getElementById('personalText').value.trim();
-    if (!txt) return;
-    runCommands([
-      { kind: 'text', text: txt, color: C.rose, speed: 220 }
-    ], txt, 'love');
-  }
-
-  function sendPartyText() {
-    const txt = document.getElementById('partyText').value.trim();
-    if (!txt) return;
-    runCommands([
-      { kind: 'effect', name: 'breathe', color: C.gold, speed: 80, brightness: 200 },
-      { kind: 'text', text: txt, color: C.gold, speed: 220 }
-    ], txt, 'party');
-  }
-
-  /* ============================================================
-     UTILITIES
-     ============================================================ */
-  function getBrightness() { return +document.getElementById('brightness').value; }
-  function getSpeed()      { return +document.getElementById('speed').value; }
+  function getBrightness() { return Math.min(+document.getElementById('brightness').value, 200); }
+  function getSpeed() { return Math.min(+document.getElementById('speed').value, 240); }
   function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function rgbCss(c) { return `rgb(${c.r}, ${c.g}, ${c.b})`; }
 
   function log(msg, type = 'cmd') {
     const root = document.getElementById('log');
-    const now = new Date().toLocaleTimeString();
     const div = document.createElement('div');
     div.className = 'entry';
-    const safe = String(msg).replace(/[<>]/g, c => ({ '<':'&lt;', '>':'&gt;' }[c]));
-    div.innerHTML = `<span class="ts">${now}</span> <span class="${type}">${safe}</span>`;
+    div.innerHTML = `<span class="ts">${new Date().toLocaleTimeString()}</span> <span class="${type}">${msg}</span>`;
     root.prepend(div);
-    while (root.children.length > 60) root.removeChild(root.lastChild);
+    if (root.children.length > 60) root.removeChild(root.lastChild);
   }
 
   function toast(msg, isErr = false, kind = null) {
@@ -1117,116 +1284,44 @@
     el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
   }
 
-  function setConn(state, text) {
-    const el = document.getElementById('conn');
-    el.dataset.state = state;
-    document.getElementById('connText').textContent = text;
-  }
-
-  function displayHost() {
-    try { return new URL(apiUrl).host; } catch { return apiUrl; }
+  async function pingApi() {
+    try {
+      const res = await fetch(`${apiUrl}/api/devices`);
+      const data = await res.json();
+      if (data.devices?.length) {
+        currentDevice = data.devices[0];
+        currentMac = currentDevice.mac;
+        document.getElementById('conn').dataset.state = 'ok';
+        document.getElementById('connText').textContent = `${currentDevice.name}`;
+      }
+    } catch (err) {
+      document.getElementById('conn').dataset.state = 'err';
+    }
   }
 
   function saveApiUrl() {
     const v = document.getElementById('apiUrl').value.trim();
-    if (!v) return;
-    apiUrl = v;
-    localStorage.setItem('wrangledApi', v);
-    toast('API URL saved');
-    pingApi();
-  }
-
-  async function pingApi() {
-    setConn('connecting', 'connecting…');
-    try {
-      const res = await fetch(`${apiUrl}/api/devices`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const devices = data.devices || [];
-      if (devices.length === 0) {
-        currentMac = null;
-        currentDevice = null;
-        setConn('err', 'no devices — click to rescan');
-        return;
-      }
-      currentDevice = devices[0];
-      currentMac = currentDevice.mac;
-      setConn('ok', `${currentDevice.name} · ${currentDevice.ip}`);
-    } catch (err) {
-      currentMac = null;
-      setConn('err', 'unreachable — click to retry');
-    }
-  }
-
-  async function rescan() {
-    setConn('connecting', 'rescanning network…');
-    toast('Scanning for WLED devices...');
-    try {
-      const res = await fetch(`${apiUrl}/api/scan`, { method: 'POST' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await pingApi();
-      if (currentMac) toast(`Found: ${currentDevice.name}`);
-    } catch (err) {
-      setConn('err', 'scan failed');
-      toast('Scan failed: ' + err.message, true);
-    }
-  }
-
-  function toggleLog() {
-    document.getElementById('logWrap').classList.toggle('collapsed');
+    if (v) { localStorage.setItem('wrangledApi', v); apiUrl = v; toast('Saved'); pingApi(); }
   }
 
   function switchTab(name) {
     document.body.dataset.tab = name;
-    document.querySelectorAll('.tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === name);
-    });
-    document.querySelectorAll('.pane').forEach(p => {
-      p.classList.toggle('active', p.dataset.pane === name);
-    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
   }
 
-  /* ============================================================
-     INIT
-     ============================================================ */
+  function toggleLog() { document.getElementById('logWrap').classList.toggle('collapsed'); }
+
   document.addEventListener('DOMContentLoaded', () => {
-    // Tab clicks
-    document.querySelectorAll('.tab').forEach(t => {
-      t.onclick = () => switchTab(t.dataset.tab);
-    });
+    document.querySelectorAll('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
+    document.getElementById('brightness').oninput = e => document.getElementById('brightnessVal').textContent = e.target.value;
+    document.getElementById('speed').oninput = e => document.getElementById('speedVal').textContent = e.target.value;
+    document.getElementById('wishText').oninput = updateCharCount;
+    document.getElementById('wishText').onkeydown = e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendWish(); };
 
-    // Sliders
-    const bSlider = document.getElementById('brightness');
-    const sSlider = document.getElementById('speed');
-    bSlider.oninput = () => document.getElementById('brightnessVal').textContent = bSlider.value;
-    sSlider.oninput = () => document.getElementById('speedVal').textContent = sSlider.value;
-
-    // API URL field
-    document.getElementById('apiUrl').value = apiUrl;
-
-    // Render all dynamic content
-    renderSwatches();
-    renderEffects();
-    renderPresets();
-    renderMoods();
-    renderAffirmations();
-    renderQuickSends();
-    renderWyatt();
-    renderHonorees();
-    renderPartyScenes();
-
-    // Enter key sends in text fields
-    ['customText', 'personalText', 'partyText'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          if (id === 'customText')  sendCustomText();
-          if (id === 'personalText') sendPersonalText();
-          if (id === 'partyText')    sendPartyText();
-        }
-      });
-    });
-
-    // Initial connection check
+    renderSwatches(); renderEffects(); renderPresets(); renderMoods();
+    renderHonorees(); renderReactions(); renderLanguages(); renderFunFacts();
+    renderWishHistory();
     pingApi();
   });
   </script>
