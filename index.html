@@ -1,560 +1,1161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WrangLED Fast-Track Build Plan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'neutral-base': '#F5F5F0',
-                        'neutral-surface': '#FFFFFF',
-                        'neutral-dark': '#33332D',
-                        'accent-orange': '#D97757',
-                        'accent-green': '#7CA982',
-                        'accent-blue': '#6B8EAD',
-                        'wire-red': '#E53E3E',
-                        'wire-black': '#1A202C',
-                        'wire-green': '#38A169'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #F5F5F0; color: #33332D; }
-        
-        /* Required Chart Container Styling */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 350px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WrangLED — Jesse, Dorys & The Trio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================================================
+       THEME — three accent palettes, one per tab
+       Edit these values to recolor the whole app
+       ======================================================================== */
+    :root {
+      --bg: #0a0a0f;
+      --surface: #14141c;
+      --surface-2: #1c1c28;
+      --border: #2a2a3a;
+      --text: #e8e8f0;
+      --muted: #8a8a9a;
+      --hint: #5a5a6a;
 
-        /* Custom Scrollbar for Code Blocks */
-        pre::-webkit-scrollbar { height: 8px; width: 8px; }
-        pre::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        pre::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        pre::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+      /* WrangLED tab — cool tech */
+      --w-1: #06b6d4;
+      --w-2: #3b82f6;
 
-        /* HTML Diagram Classes (NO SVG Replacement) */
-        .diag-box { border: 2px solid #33332D; border-radius: 0.5rem; padding: 1rem; text-align: center; background: white; font-weight: bold; position: relative; z-index: 10; }
-        .diag-line-v { width: 4px; height: 30px; background-color: #33332D; margin: 0 auto; }
-        .wire-block { display: flex; align-items: center; margin-bottom: 0.25rem; font-family: monospace; font-size: 0.875rem; }
-        .wire-color { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 0.5rem; }
-    </style>
-</head>
-<body class="antialiased min-h-screen flex flex-col">
+      /* Jesse & Dorys tab — warm romance */
+      --p-1: #f43f5e;
+      --p-2: #f59e0b;
 
-<!-- Chosen Palette: Warm Neutrals with Subdued Python/Texas Accents (Beige/Cream base, Dark Gray text, Burnt Orange, Sage Green, Slate Blue) -->
+      /* Triple Birthday tab — trio palette (coral / teal / mustard) */
+      --t-1: #f97316;
+      --t-2: #14b8a6;
+      --t-3: #eab308;
 
-<!-- Application Structure Plan: The application uses a task-oriented dashboard structure. Given the strict 6-day deadline and separate remote roles (Hardware/Dallas vs. Software/VPS), a parallel track design is optimal. 
-1. "Command Center" (Overview) provides immediate progress tracking via a dynamic Donut chart.
-2. "Hardware (Jesse)" and "Software (Jim)" tabs isolate lane-specific actionable research, diagrams, and tasks to prevent cognitive overload.
-3. "Launch Protocol" acts as the final integration checklist for the conference.
-This structure ensures both collaborators can focus on their specific deliverables while maintaining visibility of the overall project state. -->
-
-<!-- Visualization & Content Choices: 
-1. Project Progress -> Goal: Inform -> Donut Chart (Chart.js) -> Interactive task ticking updates chart -> Quick visual gauge of readiness -> Chart.js Canvas.
-2. Wiring Architecture -> Goal: Organize/Relationships -> CSS Grid/Flexbox Layout with colored indicators -> Understand physical connections -> Replaces SVG diagrams with responsive HTML elements.
-3. Network Flow -> Goal: Process Flow -> Flexbox pipeline with Unicode arrows -> Understand data traversal from Discord to LEDs -> Replaces Mermaid/SVG.
-4. Actionable Task Lists -> Goal: Organize/Action -> Interactive HTML Checklists -> Updates state and drives the Donut chart -> Vanilla JS.
-CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
-    <!-- Header -->
-    <header class="bg-neutral-dark text-neutral-base py-6 px-4 md:px-8 shadow-md">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight text-accent-orange">WrangLED <span class="text-neutral-base font-light">Fast-Track</span></h1>
-                <p class="text-sm opacity-80 mt-1">PyTexas 2025 · 6-Day Build Plan · Discord Matrix</p>
-            </div>
-            <div class="flex items-center gap-3 text-sm font-mono bg-white/10 px-4 py-2 rounded-lg">
-                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></span> T-Minus 6 Days</div>
-                <div class="w-px h-4 bg-white/20"></div>
-                <div>Target: Monday</div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Navigation -->
-    <nav class="bg-neutral-surface border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 md:px-8 flex overflow-x-auto no-scrollbar" id="nav-tabs">
-            <button data-target="overview" class="nav-btn active px-4 py-4 font-semibold text-accent-orange border-b-2 border-accent-orange whitespace-nowrap transition-colors">Command Center</button>
-            <button data-target="hardware" class="nav-btn px-4 py-4 font-semibold text-gray-500 border-b-2 border-transparent hover:text-neutral-dark whitespace-nowrap transition-colors">Hardware & Pi (Jesse)</button>
-            <button data-target="software" class="nav-btn px-4 py-4 font-semibold text-gray-500 border-b-2 border-transparent hover:text-neutral-dark whitespace-nowrap transition-colors">Software & Bot (Jim)</button>
-            <button data-target="launch" class="nav-btn px-4 py-4 font-semibold text-gray-500 border-b-2 border-transparent hover:text-neutral-dark whitespace-nowrap transition-colors">Conference Protocol</button>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-6xl mx-auto w-full p-4 md:p-8">
-
-        <!-- VIEW: OVERVIEW -->
-        <section id="overview" class="view-section block animate-fade-in">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-2">Project Status</h2>
-                <p class="text-gray-600">High-level tracking for the WrangLED PyTexas build. Both tracks must be completed by Monday to allow buffer time for integration testing.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- Progress Chart -->
-                <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center items-center col-span-1 md:col-span-1">
-                    <h3 class="text-lg font-bold mb-4 w-full text-center">Completion Readiness</h3>
-                    <div class="chart-container">
-                        <canvas id="progressChart"></canvas>
-                    </div>
-                    <div id="chart-legend" class="mt-4 text-sm font-mono text-center">
-                        <span class="text-accent-orange font-bold" id="pct-done">0%</span> Completed
-                    </div>
-                </div>
-
-                <!-- Mission Brief -->
-                <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2 flex flex-col justify-center">
-                    <h3 class="text-lg font-bold border-b border-gray-100 pb-2 mb-4">Architecture Summary</h3>
-                    <div class="bg-neutral-base p-4 rounded-lg font-mono text-sm leading-relaxed mb-4 overflow-x-auto whitespace-nowrap">
-                        Discord User &rarr; Bot &rarr; FastAPI (Jim/VPS) &rarr; Tailscale WebSocket &rarr; Python Proxy (Jesse/Pi) &rarr; WLED API &rarr; SP803E &rarr; Matrix
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mt-2">
-                        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-                            <h4 class="font-bold text-accent-blue mb-1">Dallas Lane (Jesse)</h4>
-                            <ul class="text-sm space-y-1 text-gray-700">
-                                <li>&#10003; Pi Online & Tailscale connected</li>
-                                <li>&#10003; WLED basic config</li>
-                                <li>&#9744; PSU & Matrix Wiring</li>
-                                <li>&#9744; Run Local Proxy Script</li>
-                            </ul>
-                        </div>
-                        <div class="bg-green-50 border border-green-100 p-4 rounded-lg">
-                            <h4 class="font-bold text-accent-green mb-1">Remote Lane (Jim)</h4>
-                            <ul class="text-sm space-y-1 text-gray-700">
-                                <li>&#9744; Discord Bot Logic</li>
-                                <li>&#9744; FastAPI Endpoints</li>
-                                <li>&#9744; WebSocket Server</li>
-                                <li>&#9744; WLED JSON Formatting</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VIEW: HARDWARE -->
-        <section id="hardware" class="view-section hidden animate-fade-in">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-2">Hardware & Wiring Guide</h2>
-                <p class="text-gray-600">The fastest, safest path to assemble the physical hardware in Dallas. Focus on common grounds and power safety.</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Wiring Diagram & Instructions -->
-                <div class="space-y-6">
-                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold mb-4 flex justify-between items-center">
-                            Power Injection Diagram 
-                            <span class="text-xs bg-gray-200 px-2 py-1 rounded">No SVG / HTML Layout</span>
-                        </h3>
-                        
-                        <!-- HTML/CSS based Wiring Diagram -->
-                        <div class="bg-neutral-base p-6 rounded-lg flex flex-col md:flex-row items-center justify-center gap-8 text-sm">
-                            <!-- PSU -->
-                            <div class="flex flex-col items-center">
-                                <div class="diag-box w-32 border-gray-800">
-                                    5V 20A PSU
-                                    <div class="text-xs font-normal text-gray-500 mt-1">Wall AC IN</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Wires -->
-                            <div class="flex flex-col justify-center items-start gap-2 font-mono text-xs">
-                                <div class="wire-block"><span class="wire-color bg-wire-red"></span> V+ (5V) &rarr; SP803E & Matrix</div>
-                                <div class="wire-block"><span class="wire-color bg-wire-black"></span> V- (GND) &rarr; SP803E & Matrix</div>
-                                <div class="wire-block"><span class="wire-color bg-wire-green"></span> Data (16) &rarr; Matrix DIN</div>
-                            </div>
-
-                            <!-- Controller & Matrix -->
-                            <div class="flex flex-col gap-6 items-center">
-                                <div class="diag-box w-40 border-accent-blue bg-blue-50">
-                                    SP803E WLED
-                                    <div class="text-xs font-normal text-gray-500 mt-1">GPIO 16</div>
-                                </div>
-                                <div class="text-center font-bold text-gray-400">&darr; Data Link</div>
-                                <div class="diag-box w-40 border-accent-orange bg-orange-50">
-                                    8x32 WS2812B
-                                    <div class="text-xs font-normal text-gray-500 mt-1">256 LEDs</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6">
-                            <h4 class="font-bold mb-2">Crucial Steps:</h4>
-                            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
-                                <li><strong>Unplug AC</strong> before touching terminal screws.</li>
-                                <li>Wire AC Cord to PSU: Black to <code class="bg-gray-100 px-1 rounded">L</code>, White to <code class="bg-gray-100 px-1 rounded">N</code>, Green to <code class="bg-gray-100 px-1 rounded">&#9112; Ground</code>.</li>
-                                <li>Run a Red wire from PSU <code class="bg-gray-100 px-1 rounded">V+</code> to Matrix 5V wire.</li>
-                                <li>Run a Black wire from PSU <code class="bg-gray-100 px-1 rounded">V-</code> to Matrix GND wire.</li>
-                                <li><strong>Common Ground:</strong> Run a Red wire from PSU <code class="bg-gray-100 px-1 rounded">V+</code> to SP803E VCC, and Black from PSU <code class="bg-gray-100 px-1 rounded">V-</code> to SP803E GND. <em>Controller and Matrix must share the PSU ground.</em></li>
-                                <li>Connect SP803E Data (GPIO 16) to the Matrix <code class="bg-gray-100 px-1 rounded">DIN</code> (Data In) wire.</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pitfalls & Tasks -->
-                <div class="space-y-6">
-                    <div class="bg-red-50 rounded-xl p-6 shadow-sm border border-red-100">
-                        <h3 class="text-lg font-bold text-red-800 mb-3">&#9888; Hardware Pitfalls to Avoid</h3>
-                        <ul class="space-y-3 text-sm text-red-900">
-                            <li><strong>Level Shifting (Flicker Issue):</strong> ESP32s output 3.3V data. WS2812Bs want 5V data. If the matrix flickers crazily, the first LED isn't reading the 3.3V. <em>Fix: Keep the data wire from controller to matrix under 4 inches.</em></li>
-                            <li><strong>Voltage Drop (Pink/Yellow whites):</strong> 256 LEDs at full white draw ~15A. If the end of the matrix turns pinkish, inject 5V/GND from the PSU to the <em>other end</em> of the matrix. (Or cap brightness in WLED to 50%).</li>
-                            <li><strong>Directionality:</strong> Ensure data connects to <code class="bg-red-100 px-1">DIN</code>, not <code class="bg-red-100 px-1">DOUT</code>. Look for arrows on the PCB.</li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold mb-4">Jesse's Task List</h3>
-                        <div class="space-y-2" id="hw-tasks">
-                            <!-- Populated via JS -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VIEW: SOFTWARE -->
-        <section id="software" class="view-section hidden animate-fade-in">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-2">Software & API Integrations</h2>
-                <p class="text-gray-600">Documentation for the control layer. Jim builds the bot/VPS side; Jesse runs the lightweight proxy on the Pi.</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                <div class="space-y-6">
-                    <!-- WLED API -->
-                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold mb-2">WLED JSON API (HTTP POST)</h3>
-                        <p class="text-sm text-gray-600 mb-4">Fastest way to control WLED. Send a POST request to <code class="bg-gray-100 px-1 rounded">http://[WLED-IP]/json/state</code>.</p>
-                        
-                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto">
-<pre><code>// Example Payload to turn ON, set Red, effect "Sweep"
-{
-  "on": true,
-  "bri": 128,         // Brightness 0-255
-  "seg": [
-    {
-      "col": [
-        [255, 0, 0],  // Primary Color (Red)
-        [0, 0, 0]     // Secondary Color
-      ],
-      "fx": 14,       // Effect ID (14 = Sweep)
-      "sx": 128       // Effect Speed
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
     }
-  ]
-}</code></pre>
-                        </div>
-                    </div>
 
-                    <!-- VPS Python Server Arch -->
-                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold mb-4">VPS Architecture (Jim)</h3>
-                        <p class="text-sm text-gray-700 mb-2">Use <code class="bg-gray-100 px-1 rounded">discord.py</code> and <code class="bg-gray-100 px-1 rounded">fastapi</code>. Have a background task that holds a WebSocket server.</p>
-                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                            <li>Discord command <code class="bg-gray-100 px-1 rounded">!led red</code> received.</li>
-                            <li>Bot translates to JSON WLED payload.</li>
-                            <li>VPS broadcasts payload to connected WS clients (the Pi).</li>
-                        </ul>
-                    </div>
-                </div>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-                <div class="space-y-6">
-                    <!-- Pi Proxy Script -->
-                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold mb-2">Pi WebSocket Proxy (Jesse runs this)</h3>
-                        <p class="text-sm text-gray-600 mb-4">A tiny Python script running on the Pi. It connects to Jim's VPS over Tailscale, waits for JSON, and HTTP POSTs it to the local WLED controller.</p>
-                        
-                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-blue-300 overflow-x-auto">
-<pre><code>import asyncio
-import websockets
-import requests
-import json
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Manrope', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
 
-VPS_URI = "ws://[JIM_VPS_TAILSCALE_IP]:8765"
-WLED_URL = "http://192.168.4.1/json/state" # Update to WLED IP
+    /* Subtle radial glow accent in the background — different per active tab */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(6, 182, 212, 0.08), transparent 40%),
+        radial-gradient(circle at 85% 92%, rgba(59, 130, 246, 0.06), transparent 45%);
+      transition: opacity 0.4s ease;
+      z-index: 0;
+    }
+    body[data-tab="personal"]::before {
+      background:
+        radial-gradient(circle at 15% 8%, rgba(244, 63, 94, 0.10), transparent 40%),
+        radial-gradient(circle at 85% 92%, rgba(245, 158, 11, 0.07), transparent 45%);
+    }
+    body[data-tab="party"]::before {
+      background:
+        radial-gradient(circle at 10% 10%, rgba(249, 115, 22, 0.10), transparent 35%),
+        radial-gradient(circle at 50% 95%, rgba(20, 184, 166, 0.08), transparent 40%),
+        radial-gradient(circle at 90% 15%, rgba(234, 179, 8, 0.08), transparent 40%);
+    }
 
-async def listen():
-    async with websockets.connect(VPS_URI) as ws:
-        print("Connected to VPS")
-        while True:
-            msg = await ws.recv()
-            try:
-                payload = json.loads(msg)
-                requests.post(WLED_URL, json=payload)
-                print(f"Sent to WLED: {payload}")
-            except Exception as e:
-                print(f"Error: {e}")
+    main, header, footer { position: relative; z-index: 1; }
 
-asyncio.run(listen())</code></pre>
-                        </div>
-                    </div>
+    /* HEADER */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .title {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+    .title .accent {
+      background: linear-gradient(90deg, var(--w-1), var(--w-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    body[data-tab="personal"] .title .accent {
+      background: linear-gradient(90deg, var(--p-1), var(--p-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    body[data-tab="party"] .title .accent {
+      background: linear-gradient(90deg, var(--t-1), var(--t-2), var(--t-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
 
-                    <!-- Task List -->
-                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold mb-4">Jim's Task List</h3>
-                        <div class="space-y-2" id="sw-tasks">
-                            <!-- Populated via JS -->
-                        </div>
-                    </div>
-                </div>
+    .conn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--hint);
+      box-shadow: 0 0 0 0 transparent;
+      transition: all 0.3s;
+    }
+    .conn[data-state="ok"] .conn-dot {
+      background: var(--ok);
+      box-shadow: 0 0 8px 1px var(--ok);
+    }
+    .conn[data-state="ok"] { color: var(--text); }
+    .conn[data-state="connecting"] .conn-dot {
+      background: var(--warn);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .conn[data-state="err"] .conn-dot { background: var(--err); }
+    .conn[data-state="err"] { color: var(--err); }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--warn); }
+      50% { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
+    }
 
-            </div>
-        </section>
+    /* TABS */
+    nav.tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .tab {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 14px 20px;
+      cursor: pointer;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); }
+    body[data-tab="wrangled"] .tab[data-tab="wrangled"] { border-bottom-color: var(--w-1); }
+    body[data-tab="personal"] .tab[data-tab="personal"] { border-bottom-color: var(--p-1); }
+    body[data-tab="party"] .tab[data-tab="party"] { border-bottom-color: var(--t-1); }
 
-        <!-- VIEW: LAUNCH PROTOCOL -->
-        <section id="launch" class="view-section hidden animate-fade-in">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-2">Conference Day Protocol</h2>
-                <p class="text-gray-600">PyTexas starts April 17. The network environment will be hostile (noisy WiFi). Rely on the Pixel 8a Hotspot.</p>
-            </div>
+    /* MAIN */
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 24px 220px;
+    }
+    .pane { display: none; }
+    .pane.active { display: block; animation: fade 0.3s ease; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-            <div class="max-w-3xl mx-auto space-y-6">
-                
-                <div class="bg-accent-orange text-white rounded-xl p-6 shadow-md relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-20 text-6xl font-bold">&#9873;</div>
-                    <h3 class="text-xl font-bold mb-2 relative z-10">Network Failsafe Configuration</h3>
-                    <p class="mb-4 text-sm relative z-10">Do NOT rely on venue WiFi. Configure everything for the hotspot beforehand.</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm relative z-10 font-medium">
-                        <li>Set Pixel 8a Hotspot SSID to <code class="bg-white/20 px-2 py-0.5 rounded">PyTexas_WrangLED</code> (5GHz preferred for less interference).</li>
-                        <li>Hardcode this SSID/Pass into the Raspberry Pi's <code class="bg-white/20 px-2 py-0.5 rounded">wpa_supplicant.conf</code>.</li>
-                        <li>Hardcode this SSID/Pass into WLED's WiFi settings (via WLED AP mode before the conference).</li>
-                        <li>Ensure Pi Tailscale daemon is set to start on boot.</li>
-                    </ul>
-                </div>
+    section {
+      margin-bottom: 32px;
+    }
+    section h2 {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+    section .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: -8px;
+      margin-bottom: 14px;
+    }
 
-                <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Boot Order Sequence</h3>
-                    <div class="space-y-4 text-sm">
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">1</div>
-                            <div>
-                                <h4 class="font-bold">Enable Mobile Hotspot</h4>
-                                <p class="text-gray-600">Turn on Pixel 8a hotspot. Ensure it's broadcasting.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">2</div>
-                            <div>
-                                <h4 class="font-bold">Power Up Hardware</h4>
-                                <p class="text-gray-600">Plug in the 5V 20A PSU. This powers the Matrix, the SP803E, and optionally the Pi (if powered via GPIO/buck converter, otherwise plug Pi in separately).</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">3</div>
-                            <div>
-                                <h4 class="font-bold">Verify WLED Connects</h4>
-                                <p class="text-gray-600">Check the Hotspot client list on the phone to ensure WLED and the Pi have connected and acquired local IPs.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">4</div>
-                            <div>
-                                <h4 class="font-bold">Start Pi Proxy</h4>
-                                <p class="text-gray-600">SSH into the Pi (via Tailscale or local IP) and run the `proxy.py` script. (Or set it up as a systemd service to auto-start).</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0 text-accent-green bg-green-100">5</div>
-                            <div>
-                                <h4 class="font-bold text-accent-green">Test via Discord</h4>
-                                <p class="text-gray-600">Jim sends a test command in Discord to verify the full tunnel is operational.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    /* BUTTON GRID + BUTTONS */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .grid.tight { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .grid.wide  { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 
-            </div>
-        </section>
+    .btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 500;
+      text-align: left;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn:hover {
+      background: var(--surface-2);
+      transform: translateY(-1px);
+      border-color: var(--text);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn .glyph {
+      display: inline-block;
+      margin-right: 6px;
+      opacity: 0.85;
+    }
+    .btn .sub {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 400;
+    }
 
-    </main>
+    /* Tab-flavored button accents (left-edge color bar that slides in on hover) */
+    .btn.accent::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--accent, var(--w-1));
+      transform: scaleY(0.4);
+      transform-origin: center;
+      transition: transform 0.2s;
+    }
+    .btn.accent:hover::before { transform: scaleY(1); }
+    .btn.accent { --accent: var(--w-1); }
+    body[data-tab="personal"] .btn.accent { --accent: var(--p-1); }
+    body[data-tab="party"]    .btn.accent { --accent: var(--t-1); }
 
-    <!-- State & Logic Scripts -->
-    <script>
-        // --- 1. Task State Management ---
-        const initialTasks = {
-            hardware: [
-                { id: 'h1', text: 'Wire AC cord to PSU safely', done: false },
-                { id: 'h2', text: 'Wire 5V/GND from PSU to SP803E', done: false },
-                { id: 'h3', text: 'Wire 5V/GND from PSU to Matrix', done: false },
-                { id: 'h4', text: 'Connect GPIO 16 to Matrix DIN', done: false },
-                { id: 'h5', text: 'Test WLED AP mode with basic effects', done: false },
-                { id: 'h6', text: 'Create/Test Python proxy script on Pi', done: false },
-                { id: 'h7', text: 'Lock in Hotspot SSID on Pi and WLED', done: false }
-            ],
-            software: [
-                { id: 's1', text: 'Initialize Discord Bot (discord.py)', done: false },
-                { id: 's2', text: 'Create bot command parsing logic', done: false },
-                { id: 's3', text: 'Map colors/effects to WLED JSON payload', done: false },
-                { id: 's4', text: 'Setup VPS WebSocket server (asyncio)', done: false },
-                { id: 's5', text: 'Broadcast JSON via WebSocket to Pi', done: false },
-                { id: 's6', text: 'End-to-end test with Jim sending mock data', done: false }
-            ]
-        };
+    /* Honoree cards have stronger color tint */
+    .btn.honoree-1 { --accent: var(--t-1); border-color: rgba(249, 115, 22, 0.4); }
+    .btn.honoree-2 { --accent: var(--t-2); border-color: rgba(20, 184, 166, 0.4); }
+    .btn.honoree-3 { --accent: var(--t-3); border-color: rgba(234, 179, 8, 0.4); }
+    .btn.honoree-1:hover { background: rgba(249, 115, 22, 0.12); }
+    .btn.honoree-2:hover { background: rgba(20, 184, 166, 0.12); }
+    .btn.honoree-3:hover { background: rgba(234, 179, 8, 0.12); }
 
-        // Load from local storage or use default
-        let tasks = JSON.parse(localStorage.getItem('wrangled_tasks')) || initialTasks;
+    /* Color swatches */
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 8px;
+    }
+    .swatch {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s;
+    }
+    .swatch:hover { transform: scale(1.05); border-color: var(--text); }
+    .swatch.off {
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
 
-        function saveTasks() {
-            localStorage.setItem('wrangled_tasks', JSON.stringify(tasks));
-            updateProgressChart();
+    /* Sliders */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+    }
+    .slider-row label {
+      flex: 0 0 100px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--w-1);
+    }
+    body[data-tab="personal"] .slider-row input[type="range"] { accent-color: var(--p-1); }
+    body[data-tab="party"]    .slider-row input[type="range"] { accent-color: var(--t-1); }
+    .slider-row .val {
+      flex: 0 0 50px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      text-align: right;
+    }
+
+    /* Text input row */
+    .text-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .text-row input[type="text"] {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    .text-row input[type="text"]:focus {
+      outline: none;
+      border-color: var(--w-1);
+    }
+    body[data-tab="personal"] .text-row input[type="text"]:focus { border-color: var(--p-1); }
+    body[data-tab="party"]    .text-row input[type="text"]:focus { border-color: var(--t-1); }
+    .text-row button {
+      background: linear-gradient(135deg, var(--w-1), var(--w-2));
+      color: white;
+      border: none;
+      padding: 0 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+    body[data-tab="personal"] .text-row button { background: linear-gradient(135deg, var(--p-1), var(--p-2)); }
+    body[data-tab="party"]    .text-row button { background: linear-gradient(135deg, var(--t-1), var(--t-3)); }
+
+    /* LOG (fixed bottom drawer) */
+    .log-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      max-height: 200px;
+      transition: transform 0.25s;
+      z-index: 5;
+    }
+    .log-wrap.collapsed { transform: translateY(calc(100% - 38px)); }
+    .log-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+    .log-head .caret { transition: transform 0.2s; }
+    .log-wrap.collapsed .caret { transform: rotate(180deg); }
+    .log {
+      max-height: 162px;
+      overflow-y: auto;
+      padding: 8px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+    }
+    .log .entry { color: var(--muted); }
+    .log .entry .ts { color: var(--hint); margin-right: 8px; }
+    .log .entry .cmd { color: #93c5fd; }
+    .log .entry .ok  { color: var(--ok); }
+    .log .entry .err { color: var(--err); }
+    .log .entry .heart { color: var(--p-1); }
+    .log .entry .party { color: var(--t-1); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 240px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--w-1);
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s;
+      z-index: 10;
+      max-width: 90%;
+      text-align: center;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.err  { border-left-color: var(--err); }
+    .toast.love { border-left-color: var(--p-1); }
+    .toast.party{ border-left-color: var(--t-1); }
+
+    /* Settings */
+    .settings {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+    }
+    .settings .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .settings label { color: var(--muted); }
+    .settings input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    /* Honoree edit hint */
+    .edit-hint {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .edit-hint code {
+      background: var(--bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 16px 18px 12px; }
+      .title { font-size: 1.3rem; }
+      main { padding: 20px 16px 220px; }
+    }
+  </style>
+</head>
+<body data-tab="wrangled">
+
+  <header>
+    <div>
+      <div class="title">Wrang<span class="accent">LED</span></div>
+      <div class="subtitle">For the LED matrix at <span id="hostLabel">pytexas-pi</span></div>
+    </div>
+    <div class="conn" id="conn" data-state="connecting" title="Click to edit API URL">
+      <span class="conn-dot"></span>
+      <span id="connText">connecting&hellip;</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="wrangled">WrangLED</button>
+    <button class="tab" data-tab="personal">Jesse &amp; Dorys</button>
+    <button class="tab" data-tab="party">Triple Birthday</button>
+  </nav>
+
+  <main>
+
+    <!-- ================================================================== -->
+    <!-- TAB 1: WRANGLED — direct LED control                                -->
+    <!-- ================================================================== -->
+    <div class="pane active" data-pane="wrangled">
+
+      <div class="settings">
+        <div class="row">
+          <label for="apiUrl">API URL</label>
+          <input type="text" id="apiUrl" placeholder="http://100.80.148.20:8501">
+          <button class="btn accent" style="padding: 8px 16px" onclick="saveApiUrl()">Save</button>
+        </div>
+      </div>
+
+      <section>
+        <h2>Color</h2>
+        <div class="swatches" id="swatches"></div>
+      </section>
+
+      <section>
+        <h2>Brightness &amp; speed</h2>
+        <div class="slider-row">
+          <label for="brightness">Brightness</label>
+          <input type="range" id="brightness" min="0" max="255" value="180">
+          <span class="val" id="brightnessVal">180</span>
+        </div>
+        <div class="slider-row">
+          <label for="speed">Effect speed</label>
+          <input type="range" id="speed" min="0" max="255" value="180">
+          <span class="val" id="speedVal">180</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Effects</h2>
+        <div class="grid tight" id="effectButtons"></div>
+      </section>
+
+      <section>
+        <h2>Scrolling text</h2>
+        <p class="hint">Sends to the matrix as a marquee in the current color.</p>
+        <div class="text-row">
+          <input type="text" id="customText" placeholder="Type a message...">
+          <button onclick="sendCustomText()">Send</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Power</h2>
+        <div class="grid tight">
+          <button class="btn accent" onclick="sendCommand({kind:'power', state:'on'})">◉ Power on</button>
+          <button class="btn" onclick="sendCommand({kind:'power', state:'off'})">○ Power off</button>
+          <button class="btn" onclick="runScene('reset')">↺ Reset</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- TAB 2: JESSE & DORYS — personal scenes                             -->
+    <!-- ================================================================== -->
+    <div class="pane" data-pane="personal">
+
+      <section>
+        <h2>Mood scenes</h2>
+        <p class="hint">One-tap full-mood shifts — color, effect, and a scrolling line all at once.</p>
+        <div class="grid" id="moodScenes"></div>
+      </section>
+
+      <section>
+        <h2>For Dorys</h2>
+        <p class="hint">Tap to send an affirmation in soft rose with the message scrolling.</p>
+        <div class="grid wide" id="affirmations"></div>
+      </section>
+
+      <section>
+        <h2>Quick send</h2>
+        <div class="grid tight" id="quickSends"></div>
+        <div class="text-row" style="margin-top: 14px">
+          <input type="text" id="personalText" placeholder="Write your own message...">
+          <button onclick="sendPersonalText()">Send to her</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Wyatt mode</h2>
+        <p class="hint">Because the dog deserves LEDs too.</p>
+        <div class="grid" id="wyattScenes"></div>
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- TAB 3: TRIPLE BIRTHDAY — party scenes                              -->
+    <!-- ================================================================== -->
+    <div class="pane" data-pane="party">
+
+      <div class="edit-hint">
+        Edit the three honoree names + signature messages by changing
+        <code>PARTY.honorees</code> in this file's
+        <code>&lt;script&gt;</code> block — then commit and push from Antigravity.
+      </div>
+
+      <section>
+        <h2>Honoree spotlights</h2>
+        <p class="hint">Each honoree gets a signature color (coral, teal, mustard) and a personal scroll.</p>
+        <div class="grid wide" id="honorees"></div>
+      </section>
+
+      <section>
+        <h2>Party scenes</h2>
+        <p class="hint">Run these as the night progresses — guests arriving, cake, toast, hot pot, dancing, wind-down.</p>
+        <div class="grid" id="partyScenes"></div>
+      </section>
+
+      <section>
+        <h2>Custom toast</h2>
+        <p class="hint">Type a celebratory line and send it to the matrix in gold.</p>
+        <div class="text-row">
+          <input type="text" id="partyText" placeholder="¡Salud y feliz cumpleaños!">
+          <button onclick="sendPartyText()">Send toast</button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- LOG DRAWER -->
+  <div class="log-wrap" id="logWrap">
+    <div class="log-head" onclick="toggleLog()">
+      <span>Command log</span>
+      <span class="caret">▾</span>
+    </div>
+    <div class="log" id="log">
+      <div class="entry"><span class="ts">--:--:--</span> ready &mdash; pick a scene to begin</div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  /* ============================================================
+     CONFIG — auto-detect API URL based on how the page is served
+     If served from the Pi (http://100.80.148.20:8501), use same origin.
+     If opened as a local file (file://...), fall back to Tailscale IP.
+     User can override via the "API URL" field on the WrangLED tab.
+     ============================================================ */
+  const FALLBACK_API = 'http://100.80.148.20:8501';
+  let apiUrl = (function() {
+    const saved = localStorage.getItem('wrangledApi');
+    if (saved) return saved;
+    if (location.protocol === 'file:') return FALLBACK_API;
+    return location.origin;
+  })();
+
+  /* ============================================================
+     COLORS — the canonical palette used across scenes
+     ============================================================ */
+  const C = {
+    red:    { r: 220, g: 38,  b: 38  },
+    coral:  { r: 249, g: 115, b: 22  },
+    amber:  { r: 245, g: 158, b: 11  },
+    gold:   { r: 234, g: 179, b: 8   },
+    yellow: { r: 250, g: 204, b: 21  },
+    green:  { r: 34,  g: 197, b: 94  },
+    teal:   { r: 20,  g: 184, b: 166 },
+    cyan:   { r: 6,   g: 182, b: 212 },
+    blue:   { r: 59,  g: 130, b: 246 },
+    indigo: { r: 99,  g: 102, b: 241 },
+    purple: { r: 168, g: 85,  b: 247 },
+    rose:   { r: 244, g: 63,  b: 94  },
+    pink:   { r: 236, g: 72,  b: 153 },
+    white:  { r: 255, g: 255, b: 255 },
+    warm:   { r: 255, g: 180, b: 100 },
+    soft:   { r: 255, g: 200, b: 220 },
+    candle: { r: 255, g: 140, b: 60  }
+  };
+
+  /* ============================================================
+     WRANGLED TAB DATA — colors, effects
+     ============================================================ */
+  const SWATCHES = [
+    { name: 'red',    color: C.red    },
+    { name: 'coral',  color: C.coral  },
+    { name: 'amber',  color: C.amber  },
+    { name: 'yellow', color: C.yellow },
+    { name: 'green',  color: C.green  },
+    { name: 'teal',   color: C.teal   },
+    { name: 'cyan',   color: C.cyan   },
+    { name: 'blue',   color: C.blue   },
+    { name: 'purple', color: C.purple },
+    { name: 'rose',   color: C.rose   },
+    { name: 'white',  color: C.white  }
+  ];
+  const EFFECTS = [
+    { id: 'solid',     label: 'Solid'     },
+    { id: 'breathe',   label: 'Breathe'   },
+    { id: 'sparkle',   label: 'Sparkle'   },
+    { id: 'fireworks', label: 'Fireworks' },
+    { id: 'rainbow',   label: 'Rainbow'   },
+    { id: 'fade',      label: 'Fade'      },
+    { id: 'chase',     label: 'Chase'     },
+    { id: 'scan',      label: 'Scan'      }
+  ];
+
+  /* ============================================================
+     PERSONAL TAB DATA — Jesse & Dorys scenes
+     Edit these freely — `commands` is an array run in sequence.
+     ============================================================ */
+  const PERSONAL = {
+    moods: [
+      { id: 'goodMorning', label: '☀ Good morning', sub: 'warm amber breathe',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.warm, speed: 80, brightness: 200 },
+          { kind: 'text', text: 'Buenos días, mi amor', color: C.amber, speed: 225 }
+        ] },
+      { id: 'goodnight', label: '☾ Goodnight', sub: 'deep purple slow',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.indigo, speed: 50, brightness: 120 },
+          { kind: 'text', text: 'Buenas noches, te amo', color: C.purple, speed: 200 }
+        ] },
+      { id: 'dateNight', label: '♥ Date night', sub: 'slow rose pulse',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.rose, speed: 60, brightness: 180 }
+        ] },
+      { id: 'coffeeTime', label: '☕ Coffee time', sub: 'warm amber sparkle',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.amber, speed: 150, brightness: 200 }
+        ] },
+      { id: 'celebration', label: '✦ Celebration', sub: 'rainbow fireworks',
+        commands: [
+          { kind: 'effect', name: 'fireworks', color: C.yellow, speed: 220, brightness: 230 }
+        ] },
+      { id: 'calm', label: '◐ Calm', sub: 'slow blue breathe',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.blue, speed: 40, brightness: 150 }
+        ] },
+      { id: 'motivation', label: '▲ Motivation', sub: 'orange sparkle + text',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.coral, speed: 200, brightness: 220 },
+          { kind: 'text', text: 'You got this', color: C.coral, speed: 220 }
+        ] },
+      { id: 'wyattWalk', label: '🦴 Wyatt walk', sub: 'sparkly green',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.green, speed: 180, brightness: 200 },
+          { kind: 'text', text: 'Walk time Wyatt!', color: C.green, speed: 220 }
+        ] }
+    ],
+
+    affirmations: [
+      { es: 'Dorys, eres mi todo',           en: 'You are my everything' },
+      { es: 'Estoy muy orgulloso de ti',     en: "I'm so proud of you" },
+      { es: 'Tu fuerza me inspira',          en: 'Your strength inspires me' },
+      { es: 'Escogería amarte otra vez',     en: "I'd choose to love you again" },
+      { es: 'Eres mi compañera',             en: 'You are my partner' },
+      { es: 'Te amo profundamente',          en: 'I love you deeply' },
+      { es: 'Cada día contigo es un regalo', en: 'Every day with you is a gift' },
+      { es: 'Mi corazón es tuyo',            en: 'My heart is yours' }
+    ],
+
+    quickSends: [
+      { label: 'Te amo',         text: 'Te amo' },
+      { label: 'Buenas noches',  text: 'Buenas noches' },
+      { label: 'Cada día mejor', text: 'Cada día mejor' },
+      { label: 'I believe in you', text: 'I believe in you' }
+    ],
+
+    wyatt: [
+      { id: 'walkTime', label: '🦴 Walk time!',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.cyan, speed: 200, brightness: 200 },
+          { kind: 'text', text: 'Walk time Wyatt!', color: C.cyan, speed: 225 }
+        ] },
+      { id: 'treatTime', label: '🥩 Treat time!',
+        commands: [
+          { kind: 'effect', name: 'fireworks', color: C.warm, speed: 200, brightness: 220 },
+          { kind: 'text', text: 'Treat time Wyatt!', color: C.warm, speed: 220 }
+        ] },
+      { id: 'goodBoy', label: '🐾 Good boy!',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.green, speed: 180, brightness: 200 },
+          { kind: 'text', text: 'Good boy Wyatt!', color: C.green, speed: 225 }
+        ] }
+    ]
+  };
+
+  /* ============================================================
+     PARTY TAB DATA — Triple Birthday Party
+     EDIT THE THREE HONOREE NAMES BELOW once you know who the trio is.
+     Each honoree has a signature color (coral / teal / mustard) and
+     a custom message that scrolls when you hit their button.
+     ============================================================ */
+  const PARTY = {
+    honorees: [
+      { slot: 1, name: 'Honoree 1', message: '¡Feliz cumpleaños [name]!', color: C.coral },
+      { slot: 2, name: 'Honoree 2', message: '¡Feliz cumpleaños [name]!', color: C.teal  },
+      { slot: 3, name: 'Honoree 3', message: '¡Feliz cumpleaños [name]!', color: C.gold  }
+    ],
+
+    scenes: [
+      { id: 'welcome', label: '✦ Welcome guests', sub: 'warm coral pulse',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.coral, speed: 90, brightness: 200 },
+          { kind: 'text', text: '¡Bienvenidos!', color: C.coral, speed: 220 }
+        ] },
+      { id: 'trio', label: '◉ Trio rotation', sub: 'coral → teal → mustard',
+        commands: [
+          { kind: 'effect', name: 'fade', color: C.coral, speed: 180, brightness: 220 },
+          { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: 220 }
+        ] },
+      { id: 'happyBirthday', label: '★ Happy Birthday!', sub: 'celebratory pulse',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.gold, speed: 200, brightness: 230 },
+          { kind: 'text', text: 'Happy Birthday!', color: C.gold, speed: 220 }
+        ] },
+      { id: 'candles', label: '🕯 Cake & candles', sub: 'warm flicker',
+        commands: [
+          { kind: 'effect', name: 'fireworks', color: C.candle, speed: 130, brightness: 200 },
+          { kind: 'text', text: 'Make a wish', color: C.candle, speed: 200 }
+        ] },
+      { id: 'toast', label: '🥂 Toast time', sub: 'elegant gold pulse',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.gold, speed: 70, brightness: 200 },
+          { kind: 'text', text: '¡Salud!', color: C.gold, speed: 200 }
+        ] },
+      { id: 'hotpot', label: '🍲 Hot pot ready', sub: 'warm amber simmer',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.coral, speed: 100, brightness: 220 },
+          { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: 220 }
+        ] },
+      { id: 'photo', label: '📸 Photo time', sub: 'bright white flash',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: C.white, speed: 240, brightness: 255 },
+          { kind: 'text', text: 'Photo time!', color: C.white, speed: 240 }
+        ] },
+      { id: 'dance', label: '♫ Dance floor', sub: 'rainbow cycle',
+        commands: [
+          { kind: 'effect', name: 'rainbow', color: C.purple, speed: 230, brightness: 230 }
+        ] },
+      { id: 'windDown', label: '☾ Wind down', sub: 'soft purple breathe',
+        commands: [
+          { kind: 'effect', name: 'breathe', color: C.purple, speed: 50, brightness: 130 },
+          { kind: 'text', text: 'Good night, friends', color: C.purple, speed: 200 }
+        ] }
+    ]
+  };
+
+  /* ============================================================
+     RENDER — generate buttons from data
+     ============================================================ */
+  function rgbCss(c) { return `rgb(${c.r}, ${c.g}, ${c.b})`; }
+
+  function renderSwatches() {
+    const root = document.getElementById('swatches');
+    root.innerHTML = '';
+    SWATCHES.forEach(s => {
+      const el = document.createElement('button');
+      el.className = 'swatch';
+      el.style.background = rgbCss(s.color);
+      el.title = s.name;
+      el.onclick = () => setColor(s.color);
+      root.appendChild(el);
+    });
+    const off = document.createElement('button');
+    off.className = 'swatch off';
+    off.textContent = 'OFF';
+    off.onclick = () => sendCommand({ kind: 'power', state: 'off' });
+    root.appendChild(off);
+  }
+
+  function renderEffects() {
+    const root = document.getElementById('effectButtons');
+    root.innerHTML = '';
+    EFFECTS.forEach(e => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.textContent = e.label;
+      btn.onclick = () => sendCommand({
+        kind: 'effect', name: e.id,
+        speed: getSpeed(),
+        brightness: getBrightness()
+      });
+      root.appendChild(btn);
+    });
+  }
+
+  function renderMoods() {
+    const root = document.getElementById('moodScenes');
+    root.innerHTML = '';
+    PERSONAL.moods.forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.innerHTML = `${m.label}<span class="sub">${m.sub}</span>`;
+      btn.onclick = () => runCommands(m.commands, m.label, 'love');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderAffirmations() {
+    const root = document.getElementById('affirmations');
+    root.innerHTML = '';
+    PERSONAL.affirmations.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.innerHTML = `${a.es}<span class="sub">${a.en}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+        { kind: 'text', text: a.es, color: C.soft, speed: 220 }
+      ], a.es, 'love');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderQuickSends() {
+    const root = document.getElementById('quickSends');
+    root.innerHTML = '';
+    PERSONAL.quickSends.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.textContent = q.label;
+      btn.onclick = () => runCommands([
+        { kind: 'text', text: q.text, color: C.rose, speed: 220 }
+      ], q.text, 'love');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderWyatt() {
+    const root = document.getElementById('wyattScenes');
+    root.innerHTML = '';
+    PERSONAL.wyatt.forEach(w => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.textContent = w.label;
+      btn.onclick = () => runCommands(w.commands, w.label, 'love');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderHonorees() {
+    const root = document.getElementById('honorees');
+    root.innerHTML = '';
+    PARTY.honorees.forEach(h => {
+      const btn = document.createElement('button');
+      btn.className = `btn accent honoree-${h.slot}`;
+      const msg = h.message.replace('[name]', h.name);
+      btn.innerHTML = `${h.name}<span class="sub">${msg}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 220 },
+        { kind: 'text', text: msg, color: h.color, speed: 220 }
+      ], `${h.name}: ${msg}`, 'party');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderPartyScenes() {
+    const root = document.getElementById('partyScenes');
+    root.innerHTML = '';
+    PARTY.scenes.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.innerHTML = `${s.label}<span class="sub">${s.sub}</span>`;
+      btn.onclick = () => runCommands(s.commands, s.label, 'party');
+      root.appendChild(btn);
+    });
+  }
+
+  /* ============================================================
+     COMMAND LAYER — talks to the wrangler API on the Pi
+     The wrangler exposes endpoints for color, effect, text, power.
+     ============================================================ */
+  async function sendCommand(cmd) {
+    const summary = `${cmd.kind}${cmd.name ? ':'+cmd.name : ''}${cmd.text ? ' "'+cmd.text+'"' : ''}`;
+    log(`→ ${summary}`, 'cmd');
+    try {
+      const res = await fetch(`${apiUrl}/api/command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cmd)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      log(`✓ sent`, 'ok');
+      setConn('ok', `connected to ${displayHost()}`);
+      return await res.json().catch(() => ({}));
+    } catch (err) {
+      log(`✗ ${err.message}`, 'err');
+      setConn('err', `error: ${err.message}`);
+      return null;
+    }
+  }
+
+  async function runCommands(commands, label, toastClass) {
+    toast(label || 'sent', false, toastClass);
+    for (const cmd of commands) {
+      await sendCommand(cmd);
+      await wait(150);
+    }
+  }
+
+  function runScene(name) {
+    if (name === 'reset') {
+      runCommands([
+        { kind: 'power', state: 'on' },
+        { kind: 'effect', name: 'solid', color: C.white, brightness: 100 }
+      ], 'reset', null);
+    }
+  }
+
+  function setColor(color) {
+    sendCommand({
+      kind: 'color',
+      color,
+      brightness: getBrightness()
+    });
+  }
+
+  function sendCustomText() {
+    const txt = document.getElementById('customText').value.trim();
+    if (!txt) return;
+    sendCommand({
+      kind: 'text', text: txt,
+      color: { r: 255, g: 255, b: 255 },
+      speed: getSpeed()
+    });
+  }
+
+  function sendPersonalText() {
+    const txt = document.getElementById('personalText').value.trim();
+    if (!txt) return;
+    runCommands([
+      { kind: 'text', text: txt, color: C.rose, speed: 220 }
+    ], txt, 'love');
+  }
+
+  function sendPartyText() {
+    const txt = document.getElementById('partyText').value.trim();
+    if (!txt) return;
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: C.gold, speed: 80, brightness: 200 },
+      { kind: 'text', text: txt, color: C.gold, speed: 220 }
+    ], txt, 'party');
+  }
+
+  /* ============================================================
+     UTILITIES
+     ============================================================ */
+  function getBrightness() { return +document.getElementById('brightness').value; }
+  function getSpeed()      { return +document.getElementById('speed').value; }
+  function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function log(msg, type = 'cmd') {
+    const root = document.getElementById('log');
+    const now = new Date().toLocaleTimeString();
+    const div = document.createElement('div');
+    div.className = 'entry';
+    const safe = String(msg).replace(/[<>]/g, c => ({ '<':'&lt;', '>':'&gt;' }[c]));
+    div.innerHTML = `<span class="ts">${now}</span> <span class="${type}">${safe}</span>`;
+    root.prepend(div);
+    while (root.children.length > 60) root.removeChild(root.lastChild);
+  }
+
+  function toast(msg, isErr = false, kind = null) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (isErr ? ' err' : '') + (kind ? ' ' + kind : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
+  }
+
+  function setConn(state, text) {
+    const el = document.getElementById('conn');
+    el.dataset.state = state;
+    document.getElementById('connText').textContent = text;
+  }
+
+  function displayHost() {
+    try { return new URL(apiUrl).host; } catch { return apiUrl; }
+  }
+
+  function saveApiUrl() {
+    const v = document.getElementById('apiUrl').value.trim();
+    if (!v) return;
+    apiUrl = v;
+    localStorage.setItem('wrangledApi', v);
+    toast('API URL saved');
+    pingApi();
+  }
+
+  async function pingApi() {
+    setConn('connecting', 'connecting…');
+    try {
+      const res = await fetch(`${apiUrl}/api/health`, { method: 'GET' });
+      if (res.ok) {
+        setConn('ok', `connected to ${displayHost()}`);
+      } else {
+        setConn('err', `unreachable (HTTP ${res.status})`);
+      }
+    } catch (err) {
+      setConn('err', `unreachable`);
+    }
+  }
+
+  function toggleLog() {
+    document.getElementById('logWrap').classList.toggle('collapsed');
+  }
+
+  function switchTab(name) {
+    document.body.dataset.tab = name;
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === name);
+    });
+    document.querySelectorAll('.pane').forEach(p => {
+      p.classList.toggle('active', p.dataset.pane === name);
+    });
+  }
+
+  /* ============================================================
+     INIT
+     ============================================================ */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Tab clicks
+    document.querySelectorAll('.tab').forEach(t => {
+      t.onclick = () => switchTab(t.dataset.tab);
+    });
+
+    // Sliders
+    const bSlider = document.getElementById('brightness');
+    const sSlider = document.getElementById('speed');
+    bSlider.oninput = () => document.getElementById('brightnessVal').textContent = bSlider.value;
+    sSlider.oninput = () => document.getElementById('speedVal').textContent = sSlider.value;
+
+    // API URL field
+    document.getElementById('apiUrl').value = apiUrl;
+
+    // Render all dynamic content
+    renderSwatches();
+    renderEffects();
+    renderMoods();
+    renderAffirmations();
+    renderQuickSends();
+    renderWyatt();
+    renderHonorees();
+    renderPartyScenes();
+
+    // Enter key sends in text fields
+    ['customText', 'personalText', 'partyText'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          if (id === 'customText')  sendCustomText();
+          if (id === 'personalText') sendPersonalText();
+          if (id === 'partyText')    sendPartyText();
         }
+      });
+    });
 
-        // --- 2. Chart.js Implementation ---
-        let progressChartInstance = null;
-
-        function initChart() {
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            
-            Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.color = '#666';
-
-            progressChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Completed', 'Pending'],
-                    datasets: [{
-                        data: [0, 100],
-                        backgroundColor: ['#D97757', '#E2E8F0'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '75%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' tasks';
-                                }
-                            }
-                        }
-                    },
-                    animation: { animateScale: true, animateRotate: true }
-                }
-            });
-            updateProgressChart();
-        }
-
-        function updateProgressChart() {
-            const allTasks = [...tasks.hardware, ...tasks.software];
-            const completed = allTasks.filter(t => t.done).length;
-            const pending = allTasks.length - completed;
-            const pct = Math.round((completed / allTasks.length) * 100);
-
-            if(progressChartInstance) {
-                progressChartInstance.data.datasets[0].data = [completed, pending];
-                
-                // Color change based on progress
-                let color = '#D97757'; // Orange
-                if (pct > 50) color = '#6B8EAD'; // Blue
-                if (pct === 100) color = '#7CA982'; // Green
-                
-                progressChartInstance.data.datasets[0].backgroundColor[0] = color;
-                progressChartInstance.update();
-            }
-
-            const pctLabel = document.getElementById('pct-done');
-            if(pctLabel) {
-                pctLabel.innerText = `${pct}%`;
-                pctLabel.style.color = pct === 100 ? '#7CA982' : (pct > 50 ? '#6B8EAD' : '#D97757');
-            }
-        }
-
-        // --- 3. UI Rendering & Interaction ---
-
-        function renderTasks(category, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            
-            tasks[category].forEach((task, index) => {
-                const div = document.createElement('div');
-                div.className = `flex items-center gap-3 p-3 rounded-lg border ${task.done ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'} transition-colors cursor-pointer hover:bg-gray-50`;
-                
-                const cb = document.createElement('input');
-                cb.type = 'checkbox';
-                cb.className = "w-5 h-5 accent-accent-orange cursor-pointer";
-                cb.checked = task.done;
-                
-                const span = document.createElement('span');
-                span.className = `text-sm flex-grow ${task.done ? 'text-gray-400 line-through' : 'text-gray-800'}`;
-                span.innerText = task.text;
-
-                // Click entire row to toggle
-                div.onclick = (e) => {
-                    if(e.target !== cb) cb.checked = !cb.checked;
-                    tasks[category][index].done = cb.checked;
-                    span.className = `text-sm flex-grow ${cb.checked ? 'text-gray-400 line-through' : 'text-gray-800'}`;
-                    div.className = `flex items-center gap-3 p-3 rounded-lg border ${cb.checked ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'} transition-colors cursor-pointer hover:bg-gray-50`;
-                    saveTasks();
-                };
-
-                div.appendChild(cb);
-                div.appendChild(span);
-                container.appendChild(div);
-            });
-        }
-
-        // Navigation Logic
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const viewSections = document.querySelectorAll('.view-section');
-
-        navButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active styling from all
-                navButtons.forEach(b => {
-                    b.classList.remove('active', 'text-accent-orange', 'border-accent-orange');
-                    b.classList.add('text-gray-500', 'border-transparent');
-                });
-                // Hide all views
-                viewSections.forEach(v => {
-                    v.classList.remove('block');
-                    v.classList.add('hidden');
-                });
-
-                // Add active styling to clicked
-                btn.classList.add('active', 'text-accent-orange', 'border-accent-orange');
-                btn.classList.remove('text-gray-500', 'border-transparent');
-                
-                // Show target view
-                const targetId = btn.getAttribute('data-target');
-                document.getElementById(targetId).classList.remove('hidden');
-                document.getElementById(targetId).classList.add('block');
-            });
-        });
-
-        // Initialize application
-        window.addEventListener('DOMContentLoaded', () => {
-            initChart();
-            renderTasks('hardware', 'hw-tasks');
-            renderTasks('software', 'sw-tasks');
-        });
-
-    </script>
+    // Initial connection check
+    pingApi();
+  });
+  </script>
 </body>
 </html>
