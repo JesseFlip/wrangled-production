@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WrangLED Fast-Track Build Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neutral-base': '#F5F5F0',
+                        'neutral-surface': '#FFFFFF',
+                        'neutral-dark': '#33332D',
+                        'accent-orange': '#D97757',
+                        'accent-green': '#7CA982',
+                        'accent-blue': '#6B8EAD',
+                        'wire-red': '#E53E3E',
+                        'wire-black': '#1A202C',
+                        'wire-green': '#38A169'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F5F5F0; color: #33332D; }
+        
+        /* Required Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+
+        /* Custom Scrollbar for Code Blocks */
+        pre::-webkit-scrollbar { height: 8px; width: 8px; }
+        pre::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        pre::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        pre::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        /* HTML Diagram Classes (NO SVG Replacement) */
+        .diag-box { border: 2px solid #33332D; border-radius: 0.5rem; padding: 1rem; text-align: center; background: white; font-weight: bold; position: relative; z-index: 10; }
+        .diag-line-v { width: 4px; height: 30px; background-color: #33332D; margin: 0 auto; }
+        .wire-block { display: flex; align-items: center; margin-bottom: 0.25rem; font-family: monospace; font-size: 0.875rem; }
+        .wire-color { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 0.5rem; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+<!-- Chosen Palette: Warm Neutrals with Subdued Python/Texas Accents (Beige/Cream base, Dark Gray text, Burnt Orange, Sage Green, Slate Blue) -->
+
+<!-- Application Structure Plan: The application uses a task-oriented dashboard structure. Given the strict 6-day deadline and separate remote roles (Hardware/Dallas vs. Software/VPS), a parallel track design is optimal. 
+1. "Command Center" (Overview) provides immediate progress tracking via a dynamic Donut chart.
+2. "Hardware (Jesse)" and "Software (Jim)" tabs isolate lane-specific actionable research, diagrams, and tasks to prevent cognitive overload.
+3. "Launch Protocol" acts as the final integration checklist for the conference.
+This structure ensures both collaborators can focus on their specific deliverables while maintaining visibility of the overall project state. -->
+
+<!-- Visualization & Content Choices: 
+1. Project Progress -> Goal: Inform -> Donut Chart (Chart.js) -> Interactive task ticking updates chart -> Quick visual gauge of readiness -> Chart.js Canvas.
+2. Wiring Architecture -> Goal: Organize/Relationships -> CSS Grid/Flexbox Layout with colored indicators -> Understand physical connections -> Replaces SVG diagrams with responsive HTML elements.
+3. Network Flow -> Goal: Process Flow -> Flexbox pipeline with Unicode arrows -> Understand data traversal from Discord to LEDs -> Replaces Mermaid/SVG.
+4. Actionable Task Lists -> Goal: Organize/Action -> Interactive HTML Checklists -> Updates state and drives the Donut chart -> Vanilla JS.
+CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header -->
+    <header class="bg-neutral-dark text-neutral-base py-6 px-4 md:px-8 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-accent-orange">WrangLED <span class="text-neutral-base font-light">Fast-Track</span></h1>
+                <p class="text-sm opacity-80 mt-1">PyTexas 2025 · 6-Day Build Plan · Discord Matrix</p>
+            </div>
+            <div class="flex items-center gap-3 text-sm font-mono bg-white/10 px-4 py-2 rounded-lg">
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></span> T-Minus 6 Days</div>
+                <div class="w-px h-4 bg-white/20"></div>
+                <div>Target: Monday</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-neutral-surface border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 md:px-8 flex overflow-x-auto no-scrollbar" id="nav-tabs">
+            <button data-target="overview" class="nav-btn active px-4 py-4 font-semibold text-accent-orange border-b-2 border-accent-orange whitespace-nowrap transition-colors">Command Center</button>
+            <button data-target="hardware" class="nav-btn px-4 py-4 font-semibold text-gray-500 border-b-2 border-transparent hover:text-neutral-dark whitespace-nowrap transition-colors">Hardware & Pi (Jesse)</button>
+            <button data-target="software" class="nav-btn px-4 py-4 font-semibold text-gray-500 border-b-2 border-transparent hover:text-neutral-dark whitespace-nowrap transition-colors">Software & Bot (Jim)</button>
+            <button data-target="launch" class="nav-btn px-4 py-4 font-semibold text-gray-500 border-b-2 border-transparent hover:text-neutral-dark whitespace-nowrap transition-colors">Conference Protocol</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto w-full p-4 md:p-8">
+
+        <!-- VIEW: OVERVIEW -->
+        <section id="overview" class="view-section block animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2">Project Status</h2>
+                <p class="text-gray-600">High-level tracking for the WrangLED PyTexas build. Both tracks must be completed by Monday to allow buffer time for integration testing.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Progress Chart -->
+                <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center items-center col-span-1 md:col-span-1">
+                    <h3 class="text-lg font-bold mb-4 w-full text-center">Completion Readiness</h3>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                    <div id="chart-legend" class="mt-4 text-sm font-mono text-center">
+                        <span class="text-accent-orange font-bold" id="pct-done">0%</span> Completed
+                    </div>
+                </div>
+
+                <!-- Mission Brief -->
+                <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2 flex flex-col justify-center">
+                    <h3 class="text-lg font-bold border-b border-gray-100 pb-2 mb-4">Architecture Summary</h3>
+                    <div class="bg-neutral-base p-4 rounded-lg font-mono text-sm leading-relaxed mb-4 overflow-x-auto whitespace-nowrap">
+                        Discord User &rarr; Bot &rarr; FastAPI (Jim/VPS) &rarr; Tailscale WebSocket &rarr; Python Proxy (Jesse/Pi) &rarr; WLED API &rarr; SP803E &rarr; Matrix
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                            <h4 class="font-bold text-accent-blue mb-1">Dallas Lane (Jesse)</h4>
+                            <ul class="text-sm space-y-1 text-gray-700">
+                                <li>&#10003; Pi Online & Tailscale connected</li>
+                                <li>&#10003; WLED basic config</li>
+                                <li>&#9744; PSU & Matrix Wiring</li>
+                                <li>&#9744; Run Local Proxy Script</li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 border border-green-100 p-4 rounded-lg">
+                            <h4 class="font-bold text-accent-green mb-1">Remote Lane (Jim)</h4>
+                            <ul class="text-sm space-y-1 text-gray-700">
+                                <li>&#9744; Discord Bot Logic</li>
+                                <li>&#9744; FastAPI Endpoints</li>
+                                <li>&#9744; WebSocket Server</li>
+                                <li>&#9744; WLED JSON Formatting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: HARDWARE -->
+        <section id="hardware" class="view-section hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2">Hardware & Wiring Guide</h2>
+                <p class="text-gray-600">The fastest, safest path to assemble the physical hardware in Dallas. Focus on common grounds and power safety.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Wiring Diagram & Instructions -->
+                <div class="space-y-6">
+                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-4 flex justify-between items-center">
+                            Power Injection Diagram 
+                            <span class="text-xs bg-gray-200 px-2 py-1 rounded">No SVG / HTML Layout</span>
+                        </h3>
+                        
+                        <!-- HTML/CSS based Wiring Diagram -->
+                        <div class="bg-neutral-base p-6 rounded-lg flex flex-col md:flex-row items-center justify-center gap-8 text-sm">
+                            <!-- PSU -->
+                            <div class="flex flex-col items-center">
+                                <div class="diag-box w-32 border-gray-800">
+                                    5V 20A PSU
+                                    <div class="text-xs font-normal text-gray-500 mt-1">Wall AC IN</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Wires -->
+                            <div class="flex flex-col justify-center items-start gap-2 font-mono text-xs">
+                                <div class="wire-block"><span class="wire-color bg-wire-red"></span> V+ (5V) &rarr; SP803E & Matrix</div>
+                                <div class="wire-block"><span class="wire-color bg-wire-black"></span> V- (GND) &rarr; SP803E & Matrix</div>
+                                <div class="wire-block"><span class="wire-color bg-wire-green"></span> Data (16) &rarr; Matrix DIN</div>
+                            </div>
+
+                            <!-- Controller & Matrix -->
+                            <div class="flex flex-col gap-6 items-center">
+                                <div class="diag-box w-40 border-accent-blue bg-blue-50">
+                                    SP803E WLED
+                                    <div class="text-xs font-normal text-gray-500 mt-1">GPIO 16</div>
+                                </div>
+                                <div class="text-center font-bold text-gray-400">&darr; Data Link</div>
+                                <div class="diag-box w-40 border-accent-orange bg-orange-50">
+                                    8x32 WS2812B
+                                    <div class="text-xs font-normal text-gray-500 mt-1">256 LEDs</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <h4 class="font-bold mb-2">Crucial Steps:</h4>
+                            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                                <li><strong>Unplug AC</strong> before touching terminal screws.</li>
+                                <li>Wire AC Cord to PSU: Black to <code class="bg-gray-100 px-1 rounded">L</code>, White to <code class="bg-gray-100 px-1 rounded">N</code>, Green to <code class="bg-gray-100 px-1 rounded">&#9112; Ground</code>.</li>
+                                <li>Run a Red wire from PSU <code class="bg-gray-100 px-1 rounded">V+</code> to Matrix 5V wire.</li>
+                                <li>Run a Black wire from PSU <code class="bg-gray-100 px-1 rounded">V-</code> to Matrix GND wire.</li>
+                                <li><strong>Common Ground:</strong> Run a Red wire from PSU <code class="bg-gray-100 px-1 rounded">V+</code> to SP803E VCC, and Black from PSU <code class="bg-gray-100 px-1 rounded">V-</code> to SP803E GND. <em>Controller and Matrix must share the PSU ground.</em></li>
+                                <li>Connect SP803E Data (GPIO 16) to the Matrix <code class="bg-gray-100 px-1 rounded">DIN</code> (Data In) wire.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pitfalls & Tasks -->
+                <div class="space-y-6">
+                    <div class="bg-red-50 rounded-xl p-6 shadow-sm border border-red-100">
+                        <h3 class="text-lg font-bold text-red-800 mb-3">&#9888; Hardware Pitfalls to Avoid</h3>
+                        <ul class="space-y-3 text-sm text-red-900">
+                            <li><strong>Level Shifting (Flicker Issue):</strong> ESP32s output 3.3V data. WS2812Bs want 5V data. If the matrix flickers crazily, the first LED isn't reading the 3.3V. <em>Fix: Keep the data wire from controller to matrix under 4 inches.</em></li>
+                            <li><strong>Voltage Drop (Pink/Yellow whites):</strong> 256 LEDs at full white draw ~15A. If the end of the matrix turns pinkish, inject 5V/GND from the PSU to the <em>other end</em> of the matrix. (Or cap brightness in WLED to 50%).</li>
+                            <li><strong>Directionality:</strong> Ensure data connects to <code class="bg-red-100 px-1">DIN</code>, not <code class="bg-red-100 px-1">DOUT</code>. Look for arrows on the PCB.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-4">Jesse's Task List</h3>
+                        <div class="space-y-2" id="hw-tasks">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: SOFTWARE -->
+        <section id="software" class="view-section hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2">Software & API Integrations</h2>
+                <p class="text-gray-600">Documentation for the control layer. Jim builds the bot/VPS side; Jesse runs the lightweight proxy on the Pi.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <div class="space-y-6">
+                    <!-- WLED API -->
+                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-2">WLED JSON API (HTTP POST)</h3>
+                        <p class="text-sm text-gray-600 mb-4">Fastest way to control WLED. Send a POST request to <code class="bg-gray-100 px-1 rounded">http://[WLED-IP]/json/state</code>.</p>
+                        
+                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto">
+<pre><code>// Example Payload to turn ON, set Red, effect "Sweep"
+{
+  "on": true,
+  "bri": 128,         // Brightness 0-255
+  "seg": [
+    {
+      "col": [
+        [255, 0, 0],  // Primary Color (Red)
+        [0, 0, 0]     // Secondary Color
+      ],
+      "fx": 14,       // Effect ID (14 = Sweep)
+      "sx": 128       // Effect Speed
+    }
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- VPS Python Server Arch -->
+                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-4">VPS Architecture (Jim)</h3>
+                        <p class="text-sm text-gray-700 mb-2">Use <code class="bg-gray-100 px-1 rounded">discord.py</code> and <code class="bg-gray-100 px-1 rounded">fastapi</code>. Have a background task that holds a WebSocket server.</p>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>Discord command <code class="bg-gray-100 px-1 rounded">!led red</code> received.</li>
+                            <li>Bot translates to JSON WLED payload.</li>
+                            <li>VPS broadcasts payload to connected WS clients (the Pi).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Pi Proxy Script -->
+                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-2">Pi WebSocket Proxy (Jesse runs this)</h3>
+                        <p class="text-sm text-gray-600 mb-4">A tiny Python script running on the Pi. It connects to Jim's VPS over Tailscale, waits for JSON, and HTTP POSTs it to the local WLED controller.</p>
+                        
+                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-blue-300 overflow-x-auto">
+<pre><code>import asyncio
+import websockets
+import requests
+import json
+
+VPS_URI = "ws://[JIM_VPS_TAILSCALE_IP]:8765"
+WLED_URL = "http://192.168.4.1/json/state" # Update to WLED IP
+
+async def listen():
+    async with websockets.connect(VPS_URI) as ws:
+        print("Connected to VPS")
+        while True:
+            msg = await ws.recv()
+            try:
+                payload = json.loads(msg)
+                requests.post(WLED_URL, json=payload)
+                print(f"Sent to WLED: {payload}")
+            except Exception as e:
+                print(f"Error: {e}")
+
+asyncio.run(listen())</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Task List -->
+                    <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-4">Jim's Task List</h3>
+                        <div class="space-y-2" id="sw-tasks">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VIEW: LAUNCH PROTOCOL -->
+        <section id="launch" class="view-section hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2">Conference Day Protocol</h2>
+                <p class="text-gray-600">PyTexas starts April 17. The network environment will be hostile (noisy WiFi). Rely on the Pixel 8a Hotspot.</p>
+            </div>
+
+            <div class="max-w-3xl mx-auto space-y-6">
+                
+                <div class="bg-accent-orange text-white rounded-xl p-6 shadow-md relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-20 text-6xl font-bold">&#9873;</div>
+                    <h3 class="text-xl font-bold mb-2 relative z-10">Network Failsafe Configuration</h3>
+                    <p class="mb-4 text-sm relative z-10">Do NOT rely on venue WiFi. Configure everything for the hotspot beforehand.</p>
+                    <ul class="list-disc list-inside space-y-2 text-sm relative z-10 font-medium">
+                        <li>Set Pixel 8a Hotspot SSID to <code class="bg-white/20 px-2 py-0.5 rounded">PyTexas_WrangLED</code> (5GHz preferred for less interference).</li>
+                        <li>Hardcode this SSID/Pass into the Raspberry Pi's <code class="bg-white/20 px-2 py-0.5 rounded">wpa_supplicant.conf</code>.</li>
+                        <li>Hardcode this SSID/Pass into WLED's WiFi settings (via WLED AP mode before the conference).</li>
+                        <li>Ensure Pi Tailscale daemon is set to start on boot.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-neutral-surface rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Boot Order Sequence</h3>
+                    <div class="space-y-4 text-sm">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                            <div>
+                                <h4 class="font-bold">Enable Mobile Hotspot</h4>
+                                <p class="text-gray-600">Turn on Pixel 8a hotspot. Ensure it's broadcasting.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                            <div>
+                                <h4 class="font-bold">Power Up Hardware</h4>
+                                <p class="text-gray-600">Plug in the 5V 20A PSU. This powers the Matrix, the SP803E, and optionally the Pi (if powered via GPIO/buck converter, otherwise plug Pi in separately).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">3</div>
+                            <div>
+                                <h4 class="font-bold">Verify WLED Connects</h4>
+                                <p class="text-gray-600">Check the Hotspot client list on the phone to ensure WLED and the Pi have connected and acquired local IPs.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0">4</div>
+                            <div>
+                                <h4 class="font-bold">Start Pi Proxy</h4>
+                                <p class="text-gray-600">SSH into the Pi (via Tailscale or local IP) and run the `proxy.py` script. (Or set it up as a systemd service to auto-start).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold flex-shrink-0 text-accent-green bg-green-100">5</div>
+                            <div>
+                                <h4 class="font-bold text-accent-green">Test via Discord</h4>
+                                <p class="text-gray-600">Jim sends a test command in Discord to verify the full tunnel is operational.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- State & Logic Scripts -->
+    <script>
+        // --- 1. Task State Management ---
+        const initialTasks = {
+            hardware: [
+                { id: 'h1', text: 'Wire AC cord to PSU safely', done: false },
+                { id: 'h2', text: 'Wire 5V/GND from PSU to SP803E', done: false },
+                { id: 'h3', text: 'Wire 5V/GND from PSU to Matrix', done: false },
+                { id: 'h4', text: 'Connect GPIO 16 to Matrix DIN', done: false },
+                { id: 'h5', text: 'Test WLED AP mode with basic effects', done: false },
+                { id: 'h6', text: 'Create/Test Python proxy script on Pi', done: false },
+                { id: 'h7', text: 'Lock in Hotspot SSID on Pi and WLED', done: false }
+            ],
+            software: [
+                { id: 's1', text: 'Initialize Discord Bot (discord.py)', done: false },
+                { id: 's2', text: 'Create bot command parsing logic', done: false },
+                { id: 's3', text: 'Map colors/effects to WLED JSON payload', done: false },
+                { id: 's4', text: 'Setup VPS WebSocket server (asyncio)', done: false },
+                { id: 's5', text: 'Broadcast JSON via WebSocket to Pi', done: false },
+                { id: 's6', text: 'End-to-end test with Jim sending mock data', done: false }
+            ]
+        };
+
+        // Load from local storage or use default
+        let tasks = JSON.parse(localStorage.getItem('wrangled_tasks')) || initialTasks;
+
+        function saveTasks() {
+            localStorage.setItem('wrangled_tasks', JSON.stringify(tasks));
+            updateProgressChart();
+        }
+
+        // --- 2. Chart.js Implementation ---
+        let progressChartInstance = null;
+
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#666';
+
+            progressChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['#D97757', '#E2E8F0'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + ' tasks';
+                                }
+                            }
+                        }
+                    },
+                    animation: { animateScale: true, animateRotate: true }
+                }
+            });
+            updateProgressChart();
+        }
+
+        function updateProgressChart() {
+            const allTasks = [...tasks.hardware, ...tasks.software];
+            const completed = allTasks.filter(t => t.done).length;
+            const pending = allTasks.length - completed;
+            const pct = Math.round((completed / allTasks.length) * 100);
+
+            if(progressChartInstance) {
+                progressChartInstance.data.datasets[0].data = [completed, pending];
+                
+                // Color change based on progress
+                let color = '#D97757'; // Orange
+                if (pct > 50) color = '#6B8EAD'; // Blue
+                if (pct === 100) color = '#7CA982'; // Green
+                
+                progressChartInstance.data.datasets[0].backgroundColor[0] = color;
+                progressChartInstance.update();
+            }
+
+            const pctLabel = document.getElementById('pct-done');
+            if(pctLabel) {
+                pctLabel.innerText = `${pct}%`;
+                pctLabel.style.color = pct === 100 ? '#7CA982' : (pct > 50 ? '#6B8EAD' : '#D97757');
+            }
+        }
+
+        // --- 3. UI Rendering & Interaction ---
+
+        function renderTasks(category, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            tasks[category].forEach((task, index) => {
+                const div = document.createElement('div');
+                div.className = `flex items-center gap-3 p-3 rounded-lg border ${task.done ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'} transition-colors cursor-pointer hover:bg-gray-50`;
+                
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.className = "w-5 h-5 accent-accent-orange cursor-pointer";
+                cb.checked = task.done;
+                
+                const span = document.createElement('span');
+                span.className = `text-sm flex-grow ${task.done ? 'text-gray-400 line-through' : 'text-gray-800'}`;
+                span.innerText = task.text;
+
+                // Click entire row to toggle
+                div.onclick = (e) => {
+                    if(e.target !== cb) cb.checked = !cb.checked;
+                    tasks[category][index].done = cb.checked;
+                    span.className = `text-sm flex-grow ${cb.checked ? 'text-gray-400 line-through' : 'text-gray-800'}`;
+                    div.className = `flex items-center gap-3 p-3 rounded-lg border ${cb.checked ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'} transition-colors cursor-pointer hover:bg-gray-50`;
+                    saveTasks();
+                };
+
+                div.appendChild(cb);
+                div.appendChild(span);
+                container.appendChild(div);
+            });
+        }
+
+        // Navigation Logic
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const viewSections = document.querySelectorAll('.view-section');
+
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active styling from all
+                navButtons.forEach(b => {
+                    b.classList.remove('active', 'text-accent-orange', 'border-accent-orange');
+                    b.classList.add('text-gray-500', 'border-transparent');
+                });
+                // Hide all views
+                viewSections.forEach(v => {
+                    v.classList.remove('block');
+                    v.classList.add('hidden');
+                });
+
+                // Add active styling to clicked
+                btn.classList.add('active', 'text-accent-orange', 'border-accent-orange');
+                btn.classList.remove('text-gray-500', 'border-transparent');
+                
+                // Show target view
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('hidden');
+                document.getElementById(targetId).classList.add('block');
+            });
+        });
+
+        // Initialize application
+        window.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            renderTasks('hardware', 'hw-tasks');
+            renderTasks('software', 'sw-tasks');
+        });
+
+    </script>
+</body>
+</html>
