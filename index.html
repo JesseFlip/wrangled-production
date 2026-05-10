@@ -1954,36 +1954,30 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
       log(`Whispers failed (${err.kind || 'unknown'}): ${err.message}`, 'err');
       
       let helperHtml = '';
-      if (err.kind === 'billing') {
+      if (err.kind === 'billing' && !googleKey) {
         helperHtml = `
           <div class="whisper-error">
-            <div class="whisper-error-title">Out of API credits</div>
-            <div class="whisper-error-body">${err.message}</div>
-            <a href="https://console.anthropic.com/settings/billing" target="_blank" class="whisper-error-link">Open Anthropic billing →</a>
+            <div class="whisper-error-title">Out of AI credits</div>
+            <div class="whisper-error-body">Claude is out of credits and no Google key is set.</div>
+            <a href="https://console.anthropic.com/settings/billing" target="_blank" class="whisper-error-link">Top up Anthropic →</a>
           </div>`;
-      } else if (err.kind === 'auth') {
+      } else if (err.message.includes('parse')) {
         helperHtml = `
           <div class="whisper-error">
-            <div class="whisper-error-title">API key not accepted</div>
-            <div class="whisper-error-body">Open the WrangLED tab settings and re-enter the key.</div>
-          </div>`;
-      } else if (err.kind === 'rate' || err.kind === 'overloaded') {
-        helperHtml = `
-          <div class="whisper-error">
-            <div class="whisper-error-title">Try again in a moment</div>
-            <div class="whisper-error-body">${err.message}</div>
+            <div class="whisper-error-title">AI is stuttering</div>
+            <div class="whisper-error-body">Both Claude and Gemini failed to generate valid options. You can still send a backup affirmation below.</div>
           </div>`;
       } else {
         helperHtml = `
           <div class="whisper-error">
-            <div class="whisper-error-title">Whispers couldn't generate</div>
+            <div class="whisper-error-title">AI Unavailable</div>
             <div class="whisper-error-body">${err.message}</div>
           </div>`;
       }
       optionsEl.innerHTML = helperHtml;
 
       fallbackToStaticAffirmation();
-      toast('Sent a written affirmation instead', false, 'love');
+      toast('AI failed — sent a written affirmation instead', false, 'love');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Generate three whispers';
@@ -2106,20 +2100,20 @@ Output the JSON array of three whispers.`;
       'en':    'English only.'
     }[lang];
 
-    const systemPrompt = `You are helping Jesse send a brief love message to his wife Dorys. The message will scroll across an LED matrix mounted in their home, in physical light, in a quiet moment.
-
+    const systemPrompt = `You are a high-reliability JSON generator for Jesse, who is sending love messages to his wife Dorys.
 About them:
 - Married. Together for years. They have a dog named Wyatt.
 - Dorys is from Latin America. Her first language is Spanish. Her love language is words of affirmation.
-- She recently navigated a long immigration process and a six-week separation for her embassy interview. She is now back home, studying ESL and starting career training at Parker.
-- They are building a life together. Jesse is in cybersecurity training (Per Scholas) after a layoff. Both are working hard for the future.
+- Dorys is back home, studying ESL and starting career training at Parker.
+- Jesse is in cybersecurity training. Both are working hard for the future.
 
-Your job: given Jesse's intent and a tone, produce exactly THREE distinct one-line whispers, each between 40 and 130 characters, each ASCII-only (no emoji, no accents, no smart quotes, no em dashes — use a regular hyphen). Each whisper must be a complete thought, not a fragment.
+Your job: given Jesse's intent and a tone, produce exactly THREE distinct one-line whispers, each between 40 and 130 characters, each ASCII-only (no emoji, no accents, no smart quotes, no em dashes — use a regular hyphen).
 
 Tone guidance: ${toneGuidance}.
 Language: ${langGuidance}.
 
-Output ONLY a JSON array of three strings. Example shape: ["whisper one", "whisper two", "whisper three"]`;
+Output ONLY a JSON array of three strings. Do not include any markdown, code blocks, or explanatory text.
+Example: ["whisper one", "whisper two", "whisper three"]`;
 
     const userPrompt = `Jesse's intent: "${intent}"
 Tone: ${tone}
@@ -2142,14 +2136,25 @@ Output the JSON array of three whispers.`;
     }
 
     const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!raw) throw new Error('Gemini returned no text');
     
     try {
+      // Robust extraction: strip markdown or extra prose
+      const start = raw.indexOf('[');
+      const end = raw.lastIndexOf(']');
+      if (start !== -1 && end !== -1 && end > start) {
+        raw = raw.slice(start, end + 1);
+      } else {
+        // Fallback to simple cleanup if no brackets found
+        raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+      }
+
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) throw new Error('Not an array');
       return parsed.slice(0, 3);
     } catch (e) {
+      log(`✗ Gemini JSON parse failed. Raw: ${raw.slice(0, 50)}...`, 'err');
       throw new Error('Could not parse Gemini JSON response');
     }
   }
