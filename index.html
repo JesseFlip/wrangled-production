@@ -674,6 +674,107 @@
       font-style: italic;
     }
 
+    /* Global Speed Bar */
+    .speed-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .speed-label { color: var(--muted); font-size: 0.82rem; min-width: 80px; }
+    .speed-bar input[type="range"] { flex: 1; max-width: 320px; accent-color: var(--w-1); }
+    body[data-tab="personal"] .speed-bar input[type="range"] { accent-color: var(--p-1); }
+    body[data-tab="party"]    .speed-bar input[type="range"] { accent-color: var(--t-1); }
+    body[data-tab="wishes"]   .speed-bar input[type="range"] { accent-color: var(--wish-1); }
+    .speed-readout { display: inline-flex; align-items: center; gap: 8px; min-width: 100px; }
+    .speed-readout #globalSpeedVal {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      min-width: 30px;
+      text-align: right;
+    }
+    .speed-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* Auto-Shuffle Mode */
+    .shuffle-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; }
+    .toggle-switch {
+      position: relative; display: inline-block; width: 48px; height: 26px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 999px;
+      cursor: pointer; transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      left: 3px; bottom: 3px; width: 20px; height: 20px;
+      background: white; border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: linear-gradient(135deg, var(--p-1), var(--p-2));
+    }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+    .shuffle-status {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--p-1);
+      animation: pulse-shuffle 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse-shuffle { 0%,100% { opacity: 1; transform: scale(1) } 50% { opacity: 0.4; transform: scale(0.7) } }
+    .shuffle-progress { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+
+    /* Whisper Errors */
+    .whisper-error {
+      padding: 14px 16px;
+      background: rgba(244, 63, 94, 0.06);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      border-radius: 10px;
+      font-size: 0.88rem;
+    }
+    .whisper-error-title {
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .whisper-error-body {
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .whisper-error-link {
+      display: inline-block;
+      color: var(--p-1);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .whisper-error-link:hover { text-decoration: underline; }
+
     @media (max-width: 600px) {
       header { padding: 16px 18px 12px; }
       .title { font-size: 1.3rem; }
@@ -701,6 +802,15 @@
     <button class="tab" data-tab="wishes">Wishes Wall</button>
   </nav>
 
+  <div class="speed-bar" role="region" aria-label="Global scroll speed">
+    <label for="globalSpeedSlider" class="speed-label">Scroll speed</label>
+    <input type="range" id="globalSpeedSlider" min="80" max="240" value="215">
+    <span class="speed-readout">
+      <span id="globalSpeedVal">215</span>
+      <span class="speed-tag" id="globalSpeedTag">fast</span>
+    </span>
+  </div>
+
   <main>
 
     <!-- ================================================================== -->
@@ -715,12 +825,17 @@
           <button class="btn accent" style="padding: 8px 16px" onclick="saveApiUrl()">Save</button>
         </div>
         <div class="row" style="margin-top: 10px">
-          <label for="anthropicKey" title="Used for AI-generated party content. Stored in your browser only.">Anthropic key</label>
+          <label for="anthropicKey" title="Used for AI content generation. Stored in your browser only.">Anthropic key</label>
           <input type="password" id="anthropicKey" placeholder="sk-ant-...">
           <button class="btn accent" style="padding: 8px 16px" onclick="saveAnthropicKey()">Save</button>
         </div>
+        <div class="row" style="margin-top: 10px">
+          <label for="googleKey" title="Fallback AI key. Stored in your browser only.">Google AI key</label>
+          <input type="password" id="googleKey" placeholder="Gemini API key...">
+          <button class="btn accent" style="padding: 8px 16px" onclick="saveGoogleKey()">Save</button>
+        </div>
         <div style="font-size: 0.78rem; color: var(--muted); margin-top: 10px; line-height: 1.5">
-          The Anthropic key powers the AI surprise generator on the Triple Birthday tab. It is stored in this browser only — never sent to the wrangler or to GitHub. Get a key at console.anthropic.com.
+          AI features are powered by Claude. Google Gemini is used as a fallback. Keys are stored in this browser only — never sent to the wrangler or to GitHub.
         </div>
       </div>
 
@@ -831,6 +946,24 @@
             <button class="whisper-again" onclick="generateWhispers()">↻ Try three more</button>
           </div>
           <div id="whisperOptions"></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="shuffle-row">
+          <div>
+            <h2 style="margin: 0">Auto-shuffle mode</h2>
+            <p class="hint" style="margin: 4px 0 0">Cycles affirmations and quick-sends without repeating until all 14 have played.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="shuffleToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="shufflePlaying" class="shuffle-status" style="display: none">
+          <span class="pulse-dot"></span>
+          <span>Now playing: <span id="shuffleNowText"></span></span>
+          <span class="shuffle-progress" id="shuffleProgress"></span>
         </div>
       </section>
 
@@ -1054,12 +1187,12 @@
       { id: 'goodMorning', label: '🌅 Good Morning', sub: 'warm amber breathe',
         commands: [
           { kind: 'effect', name: 'breathe', color: { r: 255, g: 140, b: 50 }, speed: 30, brightness: 80 },
-          { kind: 'text', text: 'Buenos dias, mi amor', color: { r: 255, g: 180, b: 80 }, speed: 225 }
+          { kind: 'text', text: 'Buenos dias, mi amor', color: { r: 255, g: 180, b: 80 }, speed: getGlobalSpeed() }
         ] },
       { id: 'coffeeTime', label: '☕ Coffee Time', sub: 'warm coffee glow',
         commands: [
           { kind: 'color', color: { r: 180, g: 100, b: 40 }, brightness: 90 },
-          { kind: 'text', text: 'Coffee is ready!', color: { r: 255, g: 200, b: 120 }, speed: 225 }
+          { kind: 'text', text: 'Coffee is ready!', color: { r: 255, g: 200, b: 120 }, speed: getGlobalSpeed() }
         ] },
       { id: 'dateNight', label: '💑 Date Night', sub: 'slow rose pulse',
         commands: [
@@ -1068,7 +1201,7 @@
       { id: 'goodnight', label: '🌙 Goodnight', sub: 'deep purple slow',
         commands: [
           { kind: 'effect', name: 'breathe', color: { r: 40, g: 20, b: 120 }, speed: 20, brightness: 40 },
-          { kind: 'text', text: 'Buenas noches, te amo', color: { r: 180, g: 140, b: 255 }, speed: 200 }
+          { kind: 'text', text: 'Buenas noches, te amo', color: { r: 180, g: 140, b: 255 }, speed: Math.min(getGlobalSpeed(), 200) }
         ] },
       { id: 'celebration', label: '🎉 Celebration', sub: 'rainbow burst',
         commands: [
@@ -1081,12 +1214,12 @@
       { id: 'motivation', label: '💪 Motivation', sub: 'amber chase + cheer',
         commands: [
           { kind: 'effect', name: 'chase', color: { r: 255, g: 180, b: 0 }, speed: 180, brightness: 160 },
-          { kind: 'text', text: 'You got this!', color: { r: 255, g: 220, b: 0 }, speed: 225 }
+          { kind: 'text', text: 'You got this!', color: { r: 255, g: 220, b: 0 }, speed: getGlobalSpeed() }
         ] },
       { id: 'wyattWalk', label: '🐕 Wyatt Walk', sub: 'sparkly cyan',
         commands: [
           { kind: 'effect', name: 'sparkle', color: { r: 100, g: 200, b: 255 }, speed: 200, brightness: 150 },
-          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: 225 }
+          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: getGlobalSpeed() }
         ] }
     ],
     affirmations: [
@@ -1111,17 +1244,17 @@
       { id: 'walkTime', label: '🐕 Walk Time!',
         commands: [
           { kind: 'effect', name: 'sparkle', color: { r: 100, g: 200, b: 255 }, speed: 200, brightness: 150 },
-          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: 225 }
+          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: getGlobalSpeed() }
         ] },
       { id: 'treatTime', label: '🥩 Treat Time!',
         commands: [
           { kind: 'effect', name: 'fireworks', color: { r: 255, g: 200, b: 80 }, speed: 200, brightness: 150 },
-          { kind: 'text', text: 'Treat time Wyatt!', color: { r: 255, g: 180, b: 50 }, speed: 225 }
+          { kind: 'text', text: 'Treat time Wyatt!', color: { r: 255, g: 180, b: 50 }, speed: getGlobalSpeed() }
         ] },
       { id: 'goodBoy', label: '🐾 Good Boy!',
         commands: [
           { kind: 'effect', name: 'sparkle', color: { r: 80, g: 255, b: 80 }, speed: 180, brightness: 150 },
-          { kind: 'text', text: 'Good boy Wyatt!', color: { r: 100, g: 255, b: 100 }, speed: 225 }
+          { kind: 'text', text: 'Good boy Wyatt!', color: { r: 100, g: 255, b: 100 }, speed: getGlobalSpeed() }
         ] }
     ]
   };
@@ -1136,32 +1269,32 @@
       { id: 'welcome', label: '✦ Welcome guests', sub: 'warm coral pulse',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.coral, speed: 90, brightness: 200 },
-          { kind: 'text', text: '¡Bienvenidos!', color: C.coral, speed: 220 }
+          { kind: 'text', text: '¡Bienvenidos!', color: C.coral, speed: getGlobalSpeed() }
         ] },
       { id: 'trio', label: '◉ Trio rotation', sub: 'plasma trio colors',
         commands: [
           { kind: 'effect', name: 'plasma', color: C.coral, speed: 180, brightness: 200 },
-          { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: 220 }
+          { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: getGlobalSpeed() }
         ] },
       { id: 'happyBirthday', label: '★ Happy Birthday!', sub: 'celebratory pulse',
         commands: [
           { kind: 'effect', name: 'sparkle', color: C.gold, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'Happy Birthday!', color: C.gold, speed: 220 }
+          { kind: 'text', text: 'Happy Birthday!', color: C.gold, speed: getGlobalSpeed() }
         ] },
       { id: 'candles', label: '🕯 Cake & candles', sub: 'warm flicker',
         commands: [
           { kind: 'effect', name: 'fireworks', color: C.candle, speed: 130, brightness: 200 },
-          { kind: 'text', text: 'Make a wish', color: C.candle, speed: 200 }
+          { kind: 'text', text: 'Make a wish', color: C.candle, speed: Math.min(getGlobalSpeed(), 200) }
         ] },
       { id: 'toast', label: '🥂 Toast time', sub: 'elegant gold pulse',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.gold, speed: 70, brightness: 200 },
-          { kind: 'text', text: '¡Salud!', color: C.gold, speed: 200 }
+          { kind: 'text', text: '¡Salud!', color: C.gold, speed: Math.min(getGlobalSpeed(), 200) }
         ] },
       { id: 'hotpot', label: '🍲 Hot pot ready', sub: 'warm amber simmer',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.coral, speed: 100, brightness: 200 },
-          { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: 220 }
+          { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: getGlobalSpeed() }
         ] },
       { id: 'dance', label: '♫ Dance floor', sub: 'rainbow cycle',
         commands: [
@@ -1170,7 +1303,7 @@
       { id: 'windDown', label: '☾ Wind down', sub: 'soft purple breathe',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.purple, speed: 50, brightness: 130 },
-          { kind: 'text', text: 'Good night, friends', color: C.purple, speed: 200 }
+          { kind: 'text', text: 'Good night, friends', color: C.purple, speed: Math.min(getGlobalSpeed(), 200) }
         ] }
     ],
     reactions: [
@@ -1297,7 +1430,7 @@
       btn.innerHTML = `${a.emoji} ${a.es}<span class="sub">${a.en}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
-        { kind: 'text', text: a.es, color: C.soft, speed: 220 }
+        { kind: 'text', text: a.es, color: C.soft, speed: getGlobalSpeed() }
       ], a.es, 'love');
       root.appendChild(btn);
     });
@@ -1310,7 +1443,7 @@
       const btn = document.createElement('button');
       btn.className = 'btn accent';
       btn.textContent = q.label;
-      btn.onclick = () => sendCommand({ kind: 'text', text: q.text, color: C.rose, speed: 220 });
+      btn.onclick = () => sendCommand({ kind: 'text', text: q.text, color: C.rose, speed: getGlobalSpeed() });
       root.appendChild(btn);
     });
   }
@@ -1337,7 +1470,7 @@
       btn.innerHTML = `${h.name}<span class="sub">${h.message}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 200 },
-        { kind: 'text', text: matrixMsg, color: h.color, speed: 220 }
+        { kind: 'text', text: matrixMsg, color: h.color, speed: getGlobalSpeed() }
       ], `${h.name} Spotlight`, 'party');
       root.appendChild(btn);
     });
@@ -1352,7 +1485,7 @@
       btn.innerHTML = `<span class="glyph">${r.glyph}</span><span>${r.label}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: r.effect, color: r.color, speed: r.speed, brightness: 200 },
-        { kind: 'text', text: r.text, color: r.color, speed: 220 }
+        { kind: 'text', text: r.text, color: r.color, speed: getGlobalSpeed() }
       ], r.label, 'party');
       root.appendChild(btn);
     });
@@ -1367,7 +1500,7 @@
       btn.innerHTML = `${l.honoree} · ${l.lang}<span class="sub">${l.text}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
-        { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: 220 }
+        { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: getGlobalSpeed() }
       ], `${l.honoree} (${l.lang})`, 'party');
       root.appendChild(btn);
     });
@@ -1385,7 +1518,7 @@
         const line = f.lines[Math.floor(Math.random() * f.lines.length)];
         runCommands([
           { kind: 'effect', name: 'sparkle', color: f.color, speed: 180, brightness: 200 },
-          { kind: 'text', text: line, color: f.color, speed: 220 }
+          { kind: 'text', text: line, color: f.color, speed: getGlobalSpeed() }
         ], `Fact about ${name}`, 'party');
       };
       root.appendChild(btn);
@@ -1457,7 +1590,7 @@
 
     const result = await runCommands([
       { kind: 'effect', name: 'breathe', color: color, speed: 100, brightness: 200 },
-      { kind: 'text', text: finalMsg, color: color, speed: 220 }
+      { kind: 'text', text: finalMsg, color: color, speed: getGlobalSpeed() }
     ], 'Wish sent!', 'wishes');
 
     btn.disabled = false;
@@ -1509,7 +1642,7 @@
     const l = PARTY.languages[Math.floor(Math.random() * PARTY.languages.length)];
     runCommands([
       { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
-      { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: 220 }
+      { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: getGlobalSpeed() }
     ], `Surprise: ${l.honoree}`, 'party');
   }
 
@@ -1541,12 +1674,11 @@
 
       await runCommands([
         { kind: 'effect', name: 'sparkle', color, speed: 200, brightness: 180 },
-        { kind: 'text', text: cleaned, color, speed: 215 }
+        { kind: 'text', text: cleaned, color, speed: getGlobalSpeed() }
       ], `AI: ${target}`, 'party');
 
     } catch (err) {
-      console.error(err);
-      log(`✗ AI generation failed: ${err.message}`, 'err');
+      log(`✗ AI generation failed (${err.kind || 'unknown'}): ${err.message}`, 'err');
       toast('AI hiccup — using a backup line', false);
       setAiStatus('');
       fallbackToStaticFact(target);
@@ -1594,7 +1726,31 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
 
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
-      throw new Error(`HTTP ${res.status} ${errBody.slice(0, 100)}`);
+      let parsed = null;
+      try { parsed = JSON.parse(errBody); } catch { /* leave null */ }
+      const msg = parsed?.error?.message || errBody.slice(0, 200) || `HTTP ${res.status}`;
+      const errorType = parsed?.error?.type || 'unknown';
+      
+      const friendly = (() => {
+        if (errorType === 'invalid_request_error' && /credit balance/i.test(msg)) {
+          return { kind: 'billing', text: 'Anthropic credit balance is empty — top up at console.anthropic.com' };
+        }
+        if (errorType === 'authentication_error' || res.status === 401) {
+          return { kind: 'auth', text: 'API key rejected — check the key in WrangLED settings' };
+        }
+        if (res.status === 429) {
+          return { kind: 'rate', text: 'Rate limited — wait a minute and try again' };
+        }
+        if (errorType === 'overloaded_error' || res.status === 529) {
+          return { kind: 'overloaded', text: 'Anthropic API overloaded — try again in a moment' };
+        }
+        return { kind: 'other', text: `API error: ${msg.slice(0, 120)}` };
+      })();
+      
+      const err = new Error(friendly.text);
+      err.kind = friendly.kind;
+      err.raw = msg;
+      throw err;
     }
 
     const data = await res.json();
@@ -1626,7 +1782,7 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
     const line = data.lines[Math.floor(Math.random() * data.lines.length)];
     runCommands([
       { kind: 'effect', name: 'sparkle', color: data.color, speed: 180, brightness: 180 },
-      { kind: 'text', text: line, color: data.color, speed: 215 }
+      { kind: 'text', text: line, color: data.color, speed: getGlobalSpeed() }
     ], `${honoree} (offline)`, 'party');
   }
 
@@ -1703,9 +1859,39 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
         optionsEl.appendChild(opt);
       });
     } catch (err) {
-      log(`Whispers failed: ${err.message}`, 'err');
-      toast('Claude is quiet right now — try a static affirmation', true);
-      optionsEl.innerHTML = '<div class="whisper-loading">Claude is quiet — try again, or tap a written affirmation above.</div>';
+      log(`Whispers failed (${err.kind || 'unknown'}): ${err.message}`, 'err');
+      
+      let helperHtml = '';
+      if (err.kind === 'billing') {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">Out of API credits</div>
+            <div class="whisper-error-body">${err.message}</div>
+            <a href="https://console.anthropic.com/settings/billing" target="_blank" class="whisper-error-link">Open Anthropic billing →</a>
+          </div>`;
+      } else if (err.kind === 'auth') {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">API key not accepted</div>
+            <div class="whisper-error-body">Open the WrangLED tab settings and re-enter the key.</div>
+          </div>`;
+      } else if (err.kind === 'rate' || err.kind === 'overloaded') {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">Try again in a moment</div>
+            <div class="whisper-error-body">${err.message}</div>
+          </div>`;
+      } else {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">Whispers couldn't generate</div>
+            <div class="whisper-error-body">${err.message}</div>
+          </div>`;
+      }
+      optionsEl.innerHTML = helperHtml;
+
+      fallbackToStaticAffirmation();
+      toast('Sent a written affirmation instead', false, 'love');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Generate three whispers';
@@ -1770,7 +1956,31 @@ Output the JSON array of three whispers.`;
 
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
-      throw new Error(`HTTP ${res.status} ${errBody.slice(0, 100)}`);
+      let parsed = null;
+      try { parsed = JSON.parse(errBody); } catch { /* leave null */ }
+      const msg = parsed?.error?.message || errBody.slice(0, 200) || `HTTP ${res.status}`;
+      const errorType = parsed?.error?.type || 'unknown';
+      
+      const friendly = (() => {
+        if (errorType === 'invalid_request_error' && /credit balance/i.test(msg)) {
+          return { kind: 'billing', text: 'Anthropic credit balance is empty — top up at console.anthropic.com' };
+        }
+        if (errorType === 'authentication_error' || res.status === 401) {
+          return { kind: 'auth', text: 'API key rejected — check the key in WrangLED settings' };
+        }
+        if (res.status === 429) {
+          return { kind: 'rate', text: 'Rate limited — wait a minute and try again' };
+        }
+        if (errorType === 'overloaded_error' || res.status === 529) {
+          return { kind: 'overloaded', text: 'Anthropic API overloaded — try again in a moment' };
+        }
+        return { kind: 'other', text: `API error: ${msg.slice(0, 120)}` };
+      })();
+      
+      const err = new Error(friendly.text);
+      err.kind = friendly.kind;
+      err.raw = msg;
+      throw err;
     }
 
     const data = await res.json();
@@ -1792,7 +2002,7 @@ Output the JSON array of three whispers.`;
   async function sendWhisper(text, optionEl) {
     await runCommands([
       { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
-      { kind: 'text', text, color: C.soft, speed: 220 }
+      { kind: 'text', text, color: C.soft, speed: getGlobalSpeed() }
     ], text, 'love');
 
     document.querySelectorAll('.whisper-option').forEach(el => el.classList.remove('sent'));
@@ -1806,7 +2016,7 @@ Output the JSON array of three whispers.`;
     const pick = list[Math.floor(Math.random() * list.length)];
     runCommands([
       { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
-      { kind: 'text', text: pick.es, color: C.soft, speed: 220 }
+      { kind: 'text', text: pick.es, color: C.soft, speed: getGlobalSpeed() }
     ], pick.es, 'love');
   }
 
@@ -1821,6 +2031,128 @@ Output the JSON array of three whispers.`;
 
   function showAiHint() {
     toast('Open the WrangLED tab → paste your Anthropic key in settings', true);
+  }
+
+  /* ============================================================
+     GLOBAL SCROLL SPEED
+     ============================================================ */
+  const SPEED_KEY = 'globalScrollSpeed';
+  
+  function describeSpeed(v) {
+    if (v <= 140) return 'slow';
+    if (v <= 200) return 'medium';
+    return 'fast';
+  }
+
+  function applyGlobalSpeed(v) {
+    const valEl = document.getElementById('globalSpeedVal');
+    const tagEl = document.getElementById('globalSpeedTag');
+    if (valEl) valEl.textContent = v;
+    if (tagEl) tagEl.textContent = describeSpeed(v);
+    localStorage.setItem(SPEED_KEY, String(v));
+  }
+
+  window.getGlobalSpeed = () => +(localStorage.getItem(SPEED_KEY) || 215);
+
+  /* ============================================================
+     AUTO-SHUFFLE MODE
+     ============================================================ */
+  window.shuffleState = {
+    active: false,
+    pool: [],
+    remaining: [],
+    timerId: null
+  };
+
+  function estimateScrollDuration(text, speed) {
+    const pixels = text.length * 6 + 64;
+    const speedFactor = (300 - speed) / 100;
+    const seconds = (pixels / 50) * speedFactor;
+    return Math.max(3, Math.min(20, seconds)) * 1000;
+  }
+
+  function buildShufflePool() {
+    const pool = [];
+    PERSONAL.affirmations.forEach(a => pool.push({ text: a.es, type: 'affirmation' }));
+    PERSONAL.quickSends.forEach(q => pool.push({ text: q.text, type: 'quicksend' }));
+    return pool;
+  }
+
+  function fisherYates(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  async function shuffleNext() {
+    const s = window.shuffleState;
+    if (!s.active) return;
+    if (s.remaining.length === 0) {
+      s.remaining = fisherYates(s.pool);
+    }
+    const item = s.remaining.shift();
+    document.getElementById('shuffleNowText').textContent = item.text;
+    document.getElementById('shuffleProgress').textContent = `${s.pool.length - s.remaining.length}/${s.pool.length}`;
+
+    await runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text: item.text, color: C.soft, speed: getGlobalSpeed() }
+    ], item.text, 'love');
+
+    if (!s.active) return;
+    const waitTime = estimateScrollDuration(item.text, getGlobalSpeed()) + 1500;
+    s.timerId = setTimeout(shuffleNext, waitTime);
+  }
+
+  function startShuffle() {
+    window.shuffleState = {
+      active: true,
+      pool: buildShufflePool(),
+      remaining: [],
+      timerId: null
+    };
+    document.getElementById('shufflePlaying').style.display = 'flex';
+    shuffleNext();
+  }
+
+  function stopShuffle() {
+    const s = window.shuffleState;
+    if (s.timerId) clearTimeout(s.timerId);
+    s.active = false;
+    document.getElementById('shufflePlaying').style.display = 'none';
+    toast('Auto-shuffle stopped', false, 'love');
+  }
+
+  /* ============================================================
+     RESTORED TEXT SENDERS
+     ============================================================ */
+  function sendCustomText() {
+    const el = document.getElementById('customText');
+    const text = el.value.trim();
+    if (!text) return;
+    sendCommand({ kind: 'text', text, color: C.cyan, speed: getGlobalSpeed() });
+    toast('Sent custom text');
+  }
+
+  function sendPersonalText() {
+    const el = document.getElementById('personalText');
+    const text = el.value.trim();
+    if (!text) return;
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text, color: C.soft, speed: getGlobalSpeed() }
+    ], text, 'love');
+  }
+
+  function sendPartyText() {
+    const el = document.getElementById('partyText');
+    const text = el.value.trim();
+    if (!text) return;
+    sendCommand({ kind: 'text', text, color: C.gold, speed: getGlobalSpeed() });
+    toast('Sent toast', false, 'party');
   }
 
   /* ============================================================
@@ -1912,6 +2244,13 @@ Output the JSON array of three whispers.`;
 
   function toggleLog() { document.getElementById('logWrap').classList.toggle('collapsed'); }
 
+  function saveGoogleKey() {
+    const v = document.getElementById('googleKey').value.trim();
+    if (!v) { localStorage.removeItem('googleApiKey'); toast('Google key cleared'); return; }
+    localStorage.setItem('googleApiKey', v);
+    toast('Google key saved');
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
     document.getElementById('brightness').oninput = e => document.getElementById('brightnessVal').textContent = e.target.value;
@@ -1922,9 +2261,22 @@ Output the JSON array of three whispers.`;
     // Fill settings
     document.getElementById('apiUrl').value = apiUrl;
     document.getElementById('anthropicKey').value = localStorage.getItem('anthropicApiKey') || '';
+    document.getElementById('googleKey').value = localStorage.getItem('googleApiKey') || '';
+
+    // Initialize global speed
+    const speedSlider = document.getElementById('globalSpeedSlider');
+    const savedSpeed = parseInt(localStorage.getItem(SPEED_KEY) || '215', 10);
+    speedSlider.value = savedSpeed;
+    applyGlobalSpeed(savedSpeed);
+    speedSlider.oninput = () => applyGlobalSpeed(+speedSlider.value);
 
     const lbSlider = document.getElementById('loveBrightness');
     lbSlider.oninput = () => document.getElementById('loveBrightnessVal').textContent = lbSlider.value;
+
+    document.getElementById('shuffleToggle').onchange = (e) => {
+      if (e.target.checked) startShuffle();
+      else stopShuffle();
+    };
 
     document.querySelectorAll('.whisper-tone').forEach(b => {
       b.onclick = () => setWhisperTone(b.dataset.tone);
