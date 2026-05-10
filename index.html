@@ -1661,19 +1661,38 @@
      ============================================================ */
   async function generateAndSend(honoree) {
     const target = honoree || ['Ryan', 'Irene', 'Emily'][Math.floor(Math.random() * 3)];
-    const apiKey = localStorage.getItem('anthropicApiKey');
+    const anthropicKey = localStorage.getItem('anthropicApiKey');
+    const googleKey = localStorage.getItem('googleApiKey');
 
-    if (!apiKey) {
-      toast('Add your Anthropic API key in WrangLED tab settings', true);
+    if (!anthropicKey && !googleKey) {
+      toast('Add an AI key (Anthropic or Google) in WrangLED tab settings', true);
       showAiHint();
       fallbackToStaticFact(target);
       return;
     }
 
-    setAiStatus(`Asking Claude for a fresh line about ${target}...`);
+    setAiStatus(`Asking AI for a fresh line about ${target}...`);
 
     try {
-      const text = await callClaudeForLine(target, apiKey);
+      let text = null;
+      
+      // Try Claude first
+      if (anthropicKey) {
+        try {
+          text = await callClaudeForLine(target, anthropicKey);
+        } catch (err) {
+          log(`✗ Claude failed: ${err.message}`, 'err');
+          if (!googleKey) throw err;
+          log(`↺ Falling back to Gemini...`, 'warn');
+          setAiStatus(`Claude failed. Asking Gemini for ${target}...`);
+        }
+      }
+
+      // Fallback to Gemini
+      if (!text && googleKey) {
+        text = await callGeminiForLine(target, googleKey);
+      }
+
       if (!text) throw new Error('empty response');
 
       const cleaned = sanitizeForMatrix(text);
@@ -1769,6 +1788,49 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
     return textBlock ? textBlock.text.trim() : null;
   }
 
+  async function callGeminiForLine(honoree, apiKey) {
+    const profiles = {
+      Ryan: 'Ryan, turning 43, VP of IT. Loves Hitchhiker\'s Guide to the Galaxy (the answer was 42, now he is 43). Personality: dry humor, tech-savvy, leads his IT team well. Married, beloved at work.',
+      Irene: 'Irene, Taiwanese, mother of Emily. Thoughtful, talented, an excellent cook and a creative maker (crafts, sewing, art). Warm and loving. Speaks Mandarin and English.',
+      Emily: 'Emily, Irene\'s daughter, born in the US, fluent in Mandarin and English. HUGE fan of One Piece (Luffy, Strawhats, Going Merry, King of the Pirates, the Grand Line, "the One Piece is real"). Loves anime broadly. Bilingual, bicultural.'
+    };
+
+    const systemPrompt = `You are writing one-line birthday toasts for a triple-birthday party. The recipients are three friends, each with a unique personality. Your one-liner will scroll across an LED matrix in front of party guests, so it must be:
+
+- Between 80 and 140 characters (firm cap: 180).
+- Pure ASCII only — no emoji, no Chinese characters, no smart quotes, no em dashes (use a regular hyphen). Plain English (or English mixed with romanized pinyin/Spanish where it lands naturally).
+- Warm, witty, and specific to the person. Not generic. Reference what makes them them.
+- Funny in a way that lands for everyone in the room, not insider-only. Affectionate, never mean.
+- Single line. No quotation marks. No prefix like "Here's a toast:". Just the line itself.
+
+Vary your style each time — sometimes a play on words, sometimes a sweet observation, sometimes a callback to their interests. Surprise the reader.`;
+
+    const userPrompt = `Write a fresh one-line birthday toast for ${honoree}.
+
+About ${honoree}: ${profiles[honoree]}
+
+Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ parts: [{ text: userPrompt }] }],
+        generationConfig: { maxOutputTokens: 200, temperature: 0.8 }
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Gemini API error: ${errBody.slice(0, 100)}`);
+    }
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text ? text.trim() : null;
+  }
+
   function sanitizeForMatrix(text) {
     let out = text
       .replace(/^["'`]|["'`]$/g, '')
@@ -1834,13 +1896,15 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
   async function generateWhispers() {
     const intent = document.getElementById('whisperIntent').value.trim();
     if (!intent) {
-      toast('Tell Claude what you want to convey first', true);
+      toast('Tell the AI what you want to convey first', true);
       return;
     }
 
-    const apiKey = localStorage.getItem('anthropicApiKey');
-    if (!apiKey) {
-      toast('Add your Anthropic key in WrangLED settings', true);
+    const anthropicKey = localStorage.getItem('anthropicApiKey');
+    const googleKey = localStorage.getItem('googleApiKey');
+
+    if (!anthropicKey && !googleKey) {
+      toast('Add an AI key (Anthropic or Google) in WrangLED settings', true);
       fallbackToStaticAffirmation();
       return;
     }
@@ -1855,7 +1919,25 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
     optionsEl.innerHTML = '<div class="whisper-loading">Claude is whispering three options...</div>';
 
     try {
-      const whispers = await callClaudeForWhispers(intent, whisperTone, whisperLang, apiKey);
+      let whispers = null;
+
+      // Try Claude first
+      if (anthropicKey) {
+        try {
+          whispers = await callClaudeForWhispers(intent, whisperTone, whisperLang, anthropicKey);
+        } catch (err) {
+          log(`✗ Claude whispers failed: ${err.message}`, 'err');
+          if (!googleKey) throw err;
+          log(`↺ Falling back to Gemini whispers...`, 'warn');
+          optionsEl.innerHTML = '<div class="whisper-loading">Claude failed. Asking Gemini...</div>';
+        }
+      }
+
+      // Fallback to Gemini
+      if (!whispers && googleKey) {
+        whispers = await callGeminiForWhispers(intent, whisperTone, whisperLang, googleKey);
+      }
+
       if (!whispers || whispers.length === 0) throw new Error('no whispers returned');
 
       optionsEl.innerHTML = '';
@@ -2007,6 +2089,69 @@ Output the JSON array of three whispers.`;
     }
     if (!Array.isArray(parsed)) throw new Error('whispers response not an array');
     return parsed.filter(s => typeof s === 'string' && s.length > 0).slice(0, 3);
+  }
+
+  async function callGeminiForWhispers(intent, tone, lang, apiKey) {
+    const toneGuidance = {
+      tender:     'tender, soft, intimate — like a hand on her shoulder',
+      playful:    'playful and light — a small smile, an inside joke energy',
+      proud:      'proud and admiring — name something specific you see in her',
+      passionate: 'passionate and warm — desire and depth, not crass',
+      reassuring: 'reassuring and steady — she is safe, you are here, this passes'
+    }[tone] || 'tender';
+
+    const langGuidance = {
+      'es':    'Spanish only. Unaccented ASCII (write "dia" not "día", "corazon" not "corazón"). The matrix font cannot render accents.',
+      'es-en': 'A short Spanish phrase followed by an English clause, separated by " - " or " | ". Both halves unaccented ASCII.',
+      'en':    'English only.'
+    }[lang];
+
+    const systemPrompt = `You are helping Jesse send a brief love message to his wife Dorys. The message will scroll across an LED matrix mounted in their home, in physical light, in a quiet moment.
+
+About them:
+- Married. Together for years. They have a dog named Wyatt.
+- Dorys is from Latin America. Her first language is Spanish. Her love language is words of affirmation.
+- She recently navigated a long immigration process and a six-week separation for her embassy interview. She is now back home, studying ESL and starting career training at Parker.
+- They are building a life together. Jesse is in cybersecurity training (Per Scholas) after a layoff. Both are working hard for the future.
+
+Your job: given Jesse's intent and a tone, produce exactly THREE distinct one-line whispers, each between 40 and 130 characters, each ASCII-only (no emoji, no accents, no smart quotes, no em dashes — use a regular hyphen). Each whisper must be a complete thought, not a fragment.
+
+Tone guidance: ${toneGuidance}.
+Language: ${langGuidance}.
+
+Output ONLY a JSON array of three strings. Example shape: ["whisper one", "whisper two", "whisper three"]`;
+
+    const userPrompt = `Jesse's intent: "${intent}"
+Tone: ${tone}
+Language: ${lang}
+Output the JSON array of three whispers.`;
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ parts: [{ text: userPrompt }] }],
+        generationConfig: { maxOutputTokens: 600, temperature: 0.8, response_mime_type: "application/json" }
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Gemini API error: ${errBody.slice(0, 100)}`);
+    }
+
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!raw) throw new Error('Gemini returned no text');
+    
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error('Not an array');
+      return parsed.slice(0, 3);
+    } catch (e) {
+      throw new Error('Could not parse Gemini JSON response');
+    }
   }
 
   async function sendWhisper(text, optionEl) {
