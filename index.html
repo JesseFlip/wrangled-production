@@ -677,6 +677,19 @@
         <p class="hint">Because the dog deserves LEDs too.</p>
         <div class="grid" id="wyattScenes"></div>
       </section>
+
+      <section>
+        <h2>Brightness</h2>
+        <p class="hint">Set just the matrix brightness without changing anything else.</p>
+        <div class="slider-row">
+          <label for="loveBrightness">Level</label>
+          <input type="range" id="loveBrightness" min="0" max="200" value="100">
+          <span class="val" id="loveBrightnessVal">100</span>
+        </div>
+        <button class="btn accent" style="margin-top: 10px; padding: 12px 20px;
+                background: linear-gradient(135deg, var(--p-1), var(--p-2)); color: white; border: none"
+                onclick="sendLoveBrightness()">Set brightness</button>
+      </section>
     </div>
 
     <!-- ================================================================== -->
@@ -876,53 +889,77 @@
 
   const PERSONAL = {
     moods: [
-      { id: 'goodMorning', label: '☀ Good morning', sub: 'warm amber breathe',
+      { id: 'goodMorning', label: '🌅 Good Morning', sub: 'warm amber breathe',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.warm, speed: 80, brightness: 200 },
-          { kind: 'text', text: 'Buenos días, mi amor', color: C.amber, speed: 225 }
+          { kind: 'effect', name: 'breathe', color: { r: 255, g: 140, b: 50 }, speed: 30, brightness: 80 },
+          { kind: 'text', text: 'Buenos dias, mi amor', color: { r: 255, g: 180, b: 80 }, speed: 225 }
         ] },
-      { id: 'goodnight', label: '☾ Goodnight', sub: 'deep purple slow',
+      { id: 'coffeeTime', label: '☕ Coffee Time', sub: 'warm coffee glow',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.indigo, speed: 50, brightness: 120 },
-          { kind: 'text', text: 'Buenas noches, te amo', color: C.purple, speed: 200 }
+          { kind: 'color', color: { r: 180, g: 100, b: 40 }, brightness: 90 },
+          { kind: 'text', text: 'Coffee is ready!', color: { r: 255, g: 200, b: 120 }, speed: 225 }
         ] },
-      { id: 'dateNight', label: '♥ Date night', sub: 'slow rose pulse',
+      { id: 'dateNight', label: '💑 Date Night', sub: 'slow rose pulse',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.rose, speed: 60, brightness: 180 }
+          { kind: 'effect', name: 'breathe', color: { r: 220, g: 20, b: 80 }, speed: 35, brightness: 70 }
         ] },
-      { id: 'coffeeTime', label: '☕ Coffee time', sub: 'warm amber sparkle',
+      { id: 'goodnight', label: '🌙 Goodnight', sub: 'deep purple slow',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.amber, speed: 150, brightness: 200 }
+          { kind: 'effect', name: 'breathe', color: { r: 40, g: 20, b: 120 }, speed: 20, brightness: 40 },
+          { kind: 'text', text: 'Buenas noches, te amo', color: { r: 180, g: 140, b: 255 }, speed: 200 }
         ] },
-      { id: 'celebration', label: '✦ Celebration', sub: 'rainbow fireworks',
+      { id: 'celebration', label: '🎉 Celebration', sub: 'rainbow burst',
         commands: [
-          { kind: 'effect', name: 'fireworks', color: C.yellow, speed: 220, brightness: 200 }
+          { kind: 'effect', name: 'rainbow', speed: 240, brightness: 200 }
         ] },
-      { id: 'calm', label: '◐ Calm', sub: 'slow blue breathe',
+      { id: 'calm', label: '🧘 Calm', sub: 'slow blue breathe',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.blue, speed: 40, brightness: 150 }
+          { kind: 'effect', name: 'breathe', color: { r: 0, g: 100, b: 180 }, speed: 20, brightness: 60 }
+        ] },
+      { id: 'motivation', label: '💪 Motivation', sub: 'amber chase + cheer',
+        commands: [
+          { kind: 'effect', name: 'chase', color: { r: 255, g: 180, b: 0 }, speed: 180, brightness: 160 },
+          { kind: 'text', text: 'You got this!', color: { r: 255, g: 220, b: 0 }, speed: 225 }
+        ] },
+      { id: 'wyattWalk', label: '🐕 Wyatt Walk', sub: 'sparkly cyan',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: { r: 100, g: 200, b: 255 }, speed: 200, brightness: 150 },
+          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: 225 }
         ] }
     ],
     affirmations: [
-      { es: 'Dorys, eres mi todo',           en: 'You are my everything' },
-      { es: 'Estoy muy orgulloso de ti',     en: "I'm so proud of you" },
-      { es: 'Tu fuerza me inspira',          en: 'Your strength inspires me' },
-      { es: 'Mi corazón es tuyo',            en: 'My heart is yours' }
+      { emoji: '💖', es: 'Dorys, eres mi todo',                  en: 'You are my everything' },
+      { emoji: '🌟', es: 'Estoy muy orgulloso de ti',            en: 'I am so proud of you' },
+      { emoji: '🌹', es: 'Eres hermosa por dentro y por fuera',  en: 'Beautiful inside and out' },
+      { emoji: '💪', es: 'Tu fuerza me inspira cada dia',        en: 'Your strength inspires me every day' },
+      { emoji: '🏠', es: 'Contigo cualquier lugar es hogar',     en: 'Anywhere with you is home' },
+      { emoji: '✨', es: 'Eres lo mejor que me ha pasado',       en: 'Best thing that ever happened to me' },
+      { emoji: '🫶', es: 'Te admiro mucho, mi amor',             en: 'I admire you so much, my love' },
+      { emoji: '🌅', es: 'Cada dia contigo es un regalo',        en: 'Every day with you is a gift' },
+      { emoji: '💍', es: 'Escogeria amarte otra vez',            en: 'I would choose to love you again' },
+      { emoji: '🦋', es: 'You are becoming something amazing, Dorys', en: 'English' }
     ],
     quickSends: [
-      { label: 'Te amo',         text: 'Te amo' },
-      { label: 'Buenas noches',  text: 'Buenas noches' }
+      { label: 'Te amo',         text: 'Te amo, mi amor' },
+      { label: 'Buenas noches',  text: 'Buenas noches, mi reina' },
+      { label: 'Every day better', text: 'You make every day better' },
+      { label: 'I believe in you', text: 'I believe in you' }
     ],
     wyatt: [
-      { id: 'walkTime', label: '🦴 Walk time!',
+      { id: 'walkTime', label: '🐕 Walk Time!',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.cyan, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'Walk time Wyatt!', color: C.cyan, speed: 225 }
+          { kind: 'effect', name: 'sparkle', color: { r: 100, g: 200, b: 255 }, speed: 200, brightness: 150 },
+          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: 225 }
         ] },
-      { id: 'goodBoy', label: '🐾 Good boy!',
+      { id: 'treatTime', label: '🥩 Treat Time!',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.green, speed: 180, brightness: 200 },
-          { kind: 'text', text: 'Good boy Wyatt!', color: C.green, speed: 225 }
+          { kind: 'effect', name: 'fireworks', color: { r: 255, g: 200, b: 80 }, speed: 200, brightness: 150 },
+          { kind: 'text', text: 'Treat time Wyatt!', color: { r: 255, g: 180, b: 50 }, speed: 225 }
+        ] },
+      { id: 'goodBoy', label: '🐾 Good Boy!',
+        commands: [
+          { kind: 'effect', name: 'sparkle', color: { r: 80, g: 255, b: 80 }, speed: 180, brightness: 150 },
+          { kind: 'text', text: 'Good boy Wyatt!', color: { r: 100, g: 255, b: 100 }, speed: 225 }
         ] }
     ]
   };
@@ -1085,6 +1122,45 @@
       btn.className = 'btn accent';
       btn.innerHTML = `${m.label}<span class="sub">${m.sub}</span>`;
       btn.onclick = () => runCommands(m.commands, m.label, 'love');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderAffirmations() {
+    const root = document.getElementById('affirmations');
+    root.innerHTML = '';
+    PERSONAL.affirmations.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.innerHTML = `${a.emoji} ${a.es}<span class="sub">${a.en}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+        { kind: 'text', text: a.es, color: C.soft, speed: 220 }
+      ], a.es, 'love');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderQuickSends() {
+    const root = document.getElementById('quickSends');
+    root.innerHTML = '';
+    PERSONAL.quickSends.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.textContent = q.label;
+      btn.onclick = () => sendCommand({ kind: 'text', text: q.text, color: C.rose, speed: 220 });
+      root.appendChild(btn);
+    });
+  }
+
+  function renderWyatt() {
+    const root = document.getElementById('wyattScenes');
+    root.innerHTML = '';
+    PERSONAL.wyatt.forEach(w => {
+      const btn = document.createElement('button');
+      btn.className = 'btn accent';
+      btn.textContent = w.label;
+      btn.onclick = () => runCommands(w.commands, w.label, 'love');
       root.appendChild(btn);
     });
   }
@@ -1453,6 +1529,12 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
     }
   }
 
+  function sendLoveBrightness() {
+    const val = +document.getElementById('loveBrightness').value;
+    sendCommand({ kind: 'brightness', brightness: val });
+    toast(`Brightness ${val}`, false, 'love');
+  }
+
   function getBrightness() { return Math.min(+document.getElementById('brightness').value, 200); }
   function getSpeed() { return Math.min(+document.getElementById('speed').value, 240); }
   function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -1514,7 +1596,11 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
     document.getElementById('apiUrl').value = apiUrl;
     document.getElementById('anthropicKey').value = localStorage.getItem('anthropicApiKey') || '';
 
+    const lbSlider = document.getElementById('loveBrightness');
+    lbSlider.oninput = () => document.getElementById('loveBrightnessVal').textContent = lbSlider.value;
+
     renderSwatches(); renderEffects(); renderPresets(); renderMoods();
+    renderAffirmations(); renderQuickSends(); renderWyatt();
     renderHonorees(); renderReactions(); renderLanguages(); renderFunFacts();
     renderAiGenButtons();
     renderWishHistory();
