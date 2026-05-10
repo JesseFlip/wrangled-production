@@ -547,6 +547,133 @@
       font-size: 0.82rem;
     }
 
+    /* Whispers for Dorys Styles */
+    .whisper-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .whisper-form textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      resize: vertical;
+      min-height: 70px;
+    }
+    .whisper-form textarea:focus { outline: none; border-color: var(--p-1); }
+
+    .whisper-tones, .whisper-langs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .whisper-tones .lbl, .whisper-langs .lbl {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .whisper-tone.active, .whisper-lang.active {
+      background: linear-gradient(135deg, var(--p-1), var(--p-2));
+      border-color: transparent;
+      color: white;
+    }
+
+    .whisper-generate {
+      width: 100%;
+      background: linear-gradient(135deg, var(--p-1), var(--p-2));
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      transition: all 0.15s;
+      margin-top: 6px;
+    }
+    .whisper-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.35); }
+    .whisper-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .whisper-results {
+      margin-top: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .whisper-results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .whisper-again {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      transition: all 0.15s;
+    }
+    .whisper-again:hover { border-color: var(--p-1); color: var(--p-1); }
+
+    .whisper-option {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .whisper-option:hover {
+      border-color: var(--p-1);
+      background: rgba(244, 63, 94, 0.05);
+      transform: translateX(2px);
+    }
+    .whisper-option .text {
+      flex: 1;
+      font-size: 0.98rem;
+      line-height: 1.4;
+    }
+    .whisper-option .send-icon {
+      flex: 0 0 auto;
+      color: var(--p-1);
+      font-size: 1.2rem;
+    }
+    .whisper-option:last-child { margin-bottom: 0; }
+    .whisper-option.sent {
+      border-color: var(--p-1);
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(245, 158, 11, 0.06));
+    }
+
+    .whisper-loading {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
     @media (max-width: 600px) {
       header { padding: 16px 18px 12px; }
       .title { font-size: 1.3rem; }
@@ -669,6 +796,41 @@
         <div class="text-row" style="margin-top: 14px">
           <input type="text" id="personalText" placeholder="Write your own message...">
           <button onclick="sendPersonalText()">Send to her</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Whispers for Dorys</h2>
+        <p class="hint">Tell Claude what you're trying to say. Get three options. Pick one to scroll.</p>
+
+        <div class="whisper-form">
+          <textarea id="whisperIntent" placeholder="e.g. she's stressed about Parker classes, or I miss her, or it's been a hard week and I want her to feel safe..."
+                    maxlength="240" rows="3"></textarea>
+          <div class="whisper-tones">
+            <span class="lbl">Tone:</span>
+            <button class="chip whisper-tone active" data-tone="tender">Tender</button>
+            <button class="chip whisper-tone" data-tone="playful">Playful</button>
+            <button class="chip whisper-tone" data-tone="proud">Proud</button>
+            <button class="chip whisper-tone" data-tone="passionate">Passionate</button>
+            <button class="chip whisper-tone" data-tone="reassuring">Reassuring</button>
+          </div>
+          <div class="whisper-langs">
+            <span class="lbl">Language:</span>
+            <button class="chip whisper-lang active" data-lang="es">Español</button>
+            <button class="chip whisper-lang" data-lang="es-en">Bilingual</button>
+            <button class="chip whisper-lang" data-lang="en">English</button>
+          </div>
+          <button class="whisper-generate" id="whisperGenBtn" onclick="generateWhispers()">
+            Generate three whispers
+          </button>
+        </div>
+
+        <div id="whisperResults" class="whisper-results" style="display: none">
+          <div class="whisper-results-header">
+            <span>Pick one to scroll:</span>
+            <button class="whisper-again" onclick="generateWhispers()">↻ Try three more</button>
+          </div>
+          <div id="whisperOptions"></div>
         </div>
       </section>
 
@@ -1483,6 +1645,171 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
     toast('Anthropic key saved (this browser only)');
   }
 
+  /* ============================================================
+     WHISPERS FOR DORYS — AI AFFIRMATIONS
+     ============================================================ */
+  let whisperTone = 'tender';
+  let whisperLang = 'es';
+
+  function setWhisperTone(tone) {
+    whisperTone = tone;
+    document.querySelectorAll('.whisper-tone').forEach(b => {
+      b.classList.toggle('active', b.dataset.tone === tone);
+    });
+  }
+
+  function setWhisperLang(lang) {
+    whisperLang = lang;
+    document.querySelectorAll('.whisper-lang').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+  }
+
+  async function generateWhispers() {
+    const intent = document.getElementById('whisperIntent').value.trim();
+    if (!intent) {
+      toast('Tell Claude what you want to convey first', true);
+      return;
+    }
+
+    const apiKey = localStorage.getItem('anthropicApiKey');
+    if (!apiKey) {
+      toast('Add your Anthropic key in WrangLED settings', true);
+      fallbackToStaticAffirmation();
+      return;
+    }
+
+    const btn = document.getElementById('whisperGenBtn');
+    btn.disabled = true;
+    btn.textContent = 'Listening...';
+
+    const resultsEl = document.getElementById('whisperResults');
+    const optionsEl = document.getElementById('whisperOptions');
+    resultsEl.style.display = 'block';
+    optionsEl.innerHTML = '<div class="whisper-loading">Claude is whispering three options...</div>';
+
+    try {
+      const whispers = await callClaudeForWhispers(intent, whisperTone, whisperLang, apiKey);
+      if (!whispers || whispers.length === 0) throw new Error('no whispers returned');
+
+      optionsEl.innerHTML = '';
+      whispers.forEach((line, idx) => {
+        const cleaned = sanitizeForMatrix(line);
+        if (!cleaned) return;
+        const opt = document.createElement('div');
+        opt.className = 'whisper-option';
+        opt.innerHTML = `<div class="text">${cleaned.replace(/[<>]/g, '')}</div><div class="send-icon">→</div>`;
+        opt.onclick = () => sendWhisper(cleaned, opt);
+        optionsEl.appendChild(opt);
+      });
+    } catch (err) {
+      log(`Whispers failed: ${err.message}`, 'err');
+      toast('Claude is quiet right now — try a static affirmation', true);
+      optionsEl.innerHTML = '<div class="whisper-loading">Claude is quiet — try again, or tap a written affirmation above.</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate three whispers';
+    }
+  }
+
+  async function callClaudeForWhispers(intent, tone, lang, apiKey) {
+    const toneGuidance = {
+      tender:     'tender, soft, intimate — like a hand on her shoulder',
+      playful:    'playful and light — a small smile, an inside joke energy',
+      proud:      'proud and admiring — name something specific you see in her',
+      passionate: 'passionate and warm — desire and depth, not crass',
+      reassuring: 'reassuring and steady — she is safe, you are here, this passes'
+    }[tone] || 'tender';
+
+    const langGuidance = {
+      'es':    'Spanish only. Unaccented ASCII (write "dia" not "día", "corazon" not "corazón"). The matrix font cannot render accents.',
+      'es-en': 'A short Spanish phrase followed by an English clause, separated by " - " or " | ". Both halves unaccented ASCII.',
+      'en':    'English only.'
+    }[lang];
+
+    const systemPrompt = `You are helping Jesse send a brief love message to his wife Dorys. The message will scroll across an LED matrix mounted in their home, in physical light, in a quiet moment. This is not a text message. It is a moment.
+
+About them:
+- Married. Together for years. They have a dog named Wyatt.
+- Dorys is from Latin America. Her first language is Spanish. Her love language is words of affirmation.
+- She recently navigated a long immigration process and a six-week separation for her embassy interview. She is now back home, studying ESL and starting career training at Parker.
+- They are building a life together. Jesse is in cybersecurity training (Per Scholas) after a layoff. Both are working hard for the future.
+
+Your job: given Jesse's intent and a tone, produce exactly THREE distinct one-line whispers, each between 40 and 130 characters, each ASCII-only (no emoji, no accents, no smart quotes, no em dashes — use a regular hyphen). Each whisper must be a complete thought, not a fragment.
+
+Tone guidance: ${toneGuidance}.
+Language: ${langGuidance}.
+
+The three whispers should differ in approach — perhaps one direct, one through metaphor, one through specific observation. Do not start them all the same way. Surprise the reader. Reach for warmth that lands at four-foot-tall scrolling text in a quiet room — sentiment that earns its size.
+
+Output ONLY a JSON array of three strings. No prose. No preamble. No code fences. Example shape:
+["whisper one here", "whisper two here", "whisper three here"]`;
+
+    const userPrompt = `Jesse's intent: "${intent}"
+
+Tone: ${tone}
+Language: ${lang}
+
+Output the JSON array of three whispers.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 600,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${errBody.slice(0, 100)}`);
+    }
+
+    const data = await res.json();
+    const block = (data.content || []).find(b => b.type === 'text');
+    if (!block) throw new Error('no text block in response');
+
+    let raw = block.text.trim();
+    raw = raw.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error('could not parse whispers JSON');
+    }
+    if (!Array.isArray(parsed)) throw new Error('whispers response not an array');
+    return parsed.filter(s => typeof s === 'string' && s.length > 0).slice(0, 3);
+  }
+
+  async function sendWhisper(text, optionEl) {
+    await runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text, color: C.soft, speed: 220 }
+    ], text, 'love');
+
+    document.querySelectorAll('.whisper-option').forEach(el => el.classList.remove('sent'));
+    optionEl.classList.add('sent');
+    toast('Whisper sent to Dorys', false, 'love');
+  }
+
+  function fallbackToStaticAffirmation() {
+    const list = PERSONAL.affirmations;
+    if (!list || list.length === 0) return;
+    const pick = list[Math.floor(Math.random() * list.length)];
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text: pick.es, color: C.soft, speed: 220 }
+    ], pick.es, 'love');
+  }
+
   function setAiStatus(msg) {
     const el = document.getElementById('aiStatus');
     if (!el) return;
@@ -1598,6 +1925,13 @@ Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
 
     const lbSlider = document.getElementById('loveBrightness');
     lbSlider.oninput = () => document.getElementById('loveBrightnessVal').textContent = lbSlider.value;
+
+    document.querySelectorAll('.whisper-tone').forEach(b => {
+      b.onclick = () => setWhisperTone(b.dataset.tone);
+    });
+    document.querySelectorAll('.whisper-lang').forEach(b => {
+      b.onclick = () => setWhisperLang(b.dataset.lang);
+    });
 
     renderSwatches(); renderEffects(); renderPresets(); renderMoods();
     renderAffirmations(); renderQuickSends(); renderWyatt();
