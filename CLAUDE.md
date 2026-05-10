@@ -36,3 +36,8 @@ Vite dev servers proxy `/api/*` and `/ws` to their paired FastAPI so the React c
 - `wrangler` is outbound-only. It dials `api`; no inbound ports exposed beyond the local LAN config UI.
 - Optional interfaces: Discord gateway only if `DISCORD_BOT_TOKEN` is set; `wrangler` connects only if `WRANGLED_API_URL` is set.
 - Shared pydantic `contracts/` prevents schema drift between producer and consumer.
+
+## Deployment & Synchronization
+- **Production Sync**: Changes made to `index.html` in `wrangled-production` MUST be synchronized back to `wrangled-dashboard/apps/dashboard/original_index.html`.
+- **GitHub Pushing**: ALWAYS push changes to GitHub immediately after making edits to ensure synchronization between local and remote environments.
+    - Command: `git add <files>; git commit -m "<message>"; git push origin master`
