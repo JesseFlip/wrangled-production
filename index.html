@@ -1114,6 +1114,16 @@
     return location.origin;
   })();
 
+  const SPEED_KEY = 'globalScrollSpeed';
+  window.getGlobalSpeed = () => +(localStorage.getItem(SPEED_KEY) || 215);
+
+  function setConn(state, text) {
+    const el = document.getElementById('conn');
+    if (el) el.dataset.state = state;
+    const txt = document.getElementById('connText');
+    if (txt) txt.textContent = text;
+  }
+
   let currentMac = null;
   let currentDevice = null;
 
@@ -2036,8 +2046,6 @@ Output the JSON array of three whispers.`;
   /* ============================================================
      GLOBAL SCROLL SPEED
      ============================================================ */
-  const SPEED_KEY = 'globalScrollSpeed';
-  
   function describeSpeed(v) {
     if (v <= 140) return 'slow';
     if (v <= 200) return 'medium';
@@ -2051,8 +2059,6 @@ Output the JSON array of three whispers.`;
     if (tagEl) tagEl.textContent = describeSpeed(v);
     localStorage.setItem(SPEED_KEY, String(v));
   }
-
-  window.getGlobalSpeed = () => +(localStorage.getItem(SPEED_KEY) || 215);
 
   /* ============================================================
      AUTO-SHUFFLE MODE
@@ -2155,6 +2161,29 @@ Output the JSON array of three whispers.`;
     toast('Sent toast', false, 'party');
   }
 
+  function runScene(name) {
+    if (name === 'reset') {
+      runCommands([
+        { kind: 'power', on: true },
+        { kind: 'effect', name: 'solid', color: C.white, brightness: 100 }
+      ], 'reset', null);
+    }
+  }
+
+  async function rescan() {
+    setConn('connecting', 'rescanning network…');
+    toast('Scanning for WLED devices...');
+    try {
+      const res = await fetch(`${apiUrl}/api/scan`, { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await pingApi();
+      if (currentMac) toast(`Found: ${currentDevice.name}`);
+    } catch (err) {
+      setConn('err', 'scan failed');
+      toast('Scan failed: ' + err.message, true);
+    }
+  }
+
   /* ============================================================
      API & UTILS
      ============================================================ */
@@ -2223,11 +2252,12 @@ Output the JSON array of three whispers.`;
       if (data.devices?.length) {
         currentDevice = data.devices[0];
         currentMac = currentDevice.mac;
-        document.getElementById('conn').dataset.state = 'ok';
-        document.getElementById('connText').textContent = `${currentDevice.name}`;
+        setConn('ok', currentDevice.name);
+      } else {
+        setConn('err', 'no devices found');
       }
     } catch (err) {
-      document.getElementById('conn').dataset.state = 'err';
+      setConn('err', 'unreachable');
     }
   }
 
