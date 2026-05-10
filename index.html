@@ -2143,18 +2143,29 @@ Output the JSON array of three whispers.`;
       // Robust extraction: strip markdown or extra prose
       const start = raw.indexOf('[');
       const end = raw.lastIndexOf(']');
+      let jsonPart = raw;
       if (start !== -1 && end !== -1 && end > start) {
-        raw = raw.slice(start, end + 1);
+        jsonPart = raw.slice(start, end + 1);
       } else {
-        // Fallback to simple cleanup if no brackets found
-        raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+        jsonPart = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
       }
 
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) throw new Error('Not an array');
-      return parsed.slice(0, 3);
+      try {
+        const parsed = JSON.parse(jsonPart);
+        if (Array.isArray(parsed)) return parsed.slice(0, 3);
+      } catch (jsonErr) {
+        // Fallback: Regex extraction for strings inside quotes
+        log(`↺ JSON parse failed, trying regex fallback...`, 'warn');
+        const matches = jsonPart.match(/"([^"\\]*(?:\\.[^"\\]*)*)"/g);
+        if (matches && matches.length >= 3) {
+          // Filter out small things that might not be the whispers
+          const strings = matches.map(m => m.slice(1, -1)).filter(s => s.length > 5);
+          if (strings.length >= 3) return strings.slice(0, 3);
+        }
+        throw jsonErr;
+      }
     } catch (e) {
-      log(`✗ Gemini JSON parse failed. Raw: ${raw.slice(0, 50)}...`, 'err');
+      log(`✗ Gemini parse failed. Raw: ${raw.slice(0, 200)}`, 'err');
       throw new Error('Could not parse Gemini JSON response');
     }
   }
