@@ -440,6 +440,18 @@
     .reaction-btn .glyph { font-size: 1.6rem; line-height: 1; }
     .reaction-btn:hover { transform: translateY(-2px) scale(1.02); border-color: var(--text); background: var(--surface-2); }
 
+    /* AI STATUS STYLE */
+    .ai-status {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(20, 184, 166, 0.08));
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* LOG (fixed bottom drawer) */
     .log-wrap {
       position: fixed;
@@ -571,9 +583,17 @@
 
       <div class="settings">
         <div class="row">
-          <label for="apiUrl">API URL</label>
+          <label for="apiUrl">Wrangler URL</label>
           <input type="text" id="apiUrl" placeholder="http://100.80.148.20:8501">
           <button class="btn accent" style="padding: 8px 16px" onclick="saveApiUrl()">Save</button>
+        </div>
+        <div class="row" style="margin-top: 10px">
+          <label for="anthropicKey" title="Used for AI-generated party content. Stored in your browser only.">Anthropic key</label>
+          <input type="password" id="anthropicKey" placeholder="sk-ant-...">
+          <button class="btn accent" style="padding: 8px 16px" onclick="saveAnthropicKey()">Save</button>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--muted); margin-top: 10px; line-height: 1.5">
+          The Anthropic key powers the AI surprise generator on the Triple Birthday tab. It is stored in this browser only — never sent to the wrangler or to GitHub. Get a key at console.anthropic.com.
         </div>
       </div>
 
@@ -693,6 +713,13 @@
         <h2>Honor them</h2>
         <p class="hint">Personal one-liners written for each of them. Tap for a random fun fact.</p>
         <div class="grid wide" id="funFacts"></div>
+      </section>
+
+      <section>
+        <h2>AI surprise generator</h2>
+        <p class="hint">Tap a button — Claude writes a brand-new one-liner about that honoree on the spot, and the matrix scrolls it. Every tap is different.</p>
+        <div class="grid wide" id="aiGenButtons"></div>
+        <div id="aiStatus" class="ai-status" style="display: none"></div>
       </section>
 
       <section>
@@ -902,7 +929,7 @@
 
   const PARTY = {
     honorees: [
-      { slot: 1, name: 'Ryan',  message: 'Happy 42 Ryan — the answer to everything', matrixMessage: 'Happy 42 Ryan — the answer to everything', color: C.coral },
+      { slot: 1, name: 'Ryan',  message: 'Happy 43 Ryan — beyond the answer to life!', matrixMessage: 'Happy 43 Ryan — beyond the answer to life!', color: C.coral },
       { slot: 2, name: 'Irene', message: '生日快樂 Irene · Made with love',            matrixMessage: 'Sheng ri kuai le Irene · Made with love', color: C.teal  },
       { slot: 3, name: 'Emily', message: 'Happy Birthday Emily — set sail!',          matrixMessage: 'Happy Birthday Emily — set sail!',          color: C.gold  }
     ],
@@ -970,13 +997,13 @@
       Ryan: {
         color: C.coral,
         lines: [
-          'Ryan is the answer to life, the universe, and everything. Today he turns 42.',
-          'Cheers to Ryan — 42 and still committing on Fridays.',
+          'Ryan survived his "answer to everything" year. Today he turns 43!',
+          'Cheers to Ryan — 43 and leveling up the infrastructure.',
           "Ryan's IT team would follow him into a server room fire.",
-          "Forty-two looks good on Ryan. Don't panic.",
+          'Forty-three is the new forty-two. Don\'t panic.',
           'In every multiverse, Ryan is the VP we deserve.',
           'Ryan: zero dropped tickets, infinite vibes.',
-          'Hitchhikers, your guide turns 42 tonight.'
+          'Hitchhikers, your guide turns 43 tonight.'
         ]
       },
       Irene: {
@@ -1127,6 +1154,24 @@
     });
   }
 
+  function renderAiGenButtons() {
+    const root = document.getElementById('aiGenButtons');
+    root.innerHTML = '';
+    const buttons = [
+      { honoree: 'Ryan',  label: '🤖 New zinger about Ryan',       sub: 'AI-generated, never repeats', cls: 'honoree-1' },
+      { honoree: 'Irene', label: '🤖 New tribute to Irene',        sub: 'AI-generated, never repeats', cls: 'honoree-2' },
+      { honoree: 'Emily', label: '🤖 New One Piece line for Emily', sub: 'AI-generated, never repeats', cls: 'honoree-3' },
+      { honoree: null,    label: '🎲 Random honoree, random vibe', sub: 'Surprise me',                  cls: '' }
+    ];
+    buttons.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = `btn accent ${b.cls}`.trim();
+      btn.innerHTML = `${b.label}<span class="sub">${b.sub}</span>`;
+      btn.onclick = () => generateAndSend(b.honoree);
+      root.appendChild(btn);
+    });
+  }
+
   /* ============================================================
      WISHES WALL LOGIC
      ============================================================ */
@@ -1148,8 +1193,8 @@
   function prefillLang(code) {
     const el = document.getElementById('wishText');
     const samples = {
-      en: 'Wishing you the best birthday yet!',
-      es: '¡Te deseo el mejor cumpleaños de todos!',
+      en: 'Happy birthday — wishing you joy this year!',
+      es: '¡Feliz cumpleaños — que tengas un año lleno de alegría!',
       zh: 'Sheng ri kuai le — wishing you a wonderful year ahead!'
     };
     el.value = samples[code] || '';
@@ -1228,6 +1273,151 @@
       { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
       { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: 220 }
     ], `Surprise: ${l.honoree}`, 'party');
+  }
+
+  /* ============================================================
+     AI CONTENT GENERATION
+     ============================================================ */
+  async function generateAndSend(honoree) {
+    const target = honoree || ['Ryan', 'Irene', 'Emily'][Math.floor(Math.random() * 3)];
+    const apiKey = localStorage.getItem('anthropicApiKey');
+
+    if (!apiKey) {
+      toast('Add your Anthropic API key in WrangLED tab settings', true);
+      showAiHint();
+      fallbackToStaticFact(target);
+      return;
+    }
+
+    setAiStatus(`Asking Claude for a fresh line about ${target}...`);
+
+    try {
+      const text = await callClaudeForLine(target, apiKey);
+      if (!text) throw new Error('empty response');
+
+      const cleaned = sanitizeForMatrix(text);
+      const color = PARTY.facts[target].color;
+
+      setAiStatus(`✨ Now scrolling: ${cleaned}`);
+      setTimeout(() => hideAiStatus(), 8000);
+
+      await runCommands([
+        { kind: 'effect', name: 'sparkle', color, speed: 200, brightness: 180 },
+        { kind: 'text', text: cleaned, color, speed: 215 }
+      ], `AI: ${target}`, 'party');
+
+    } catch (err) {
+      console.error(err);
+      log(`✗ AI generation failed: ${err.message}`, 'err');
+      toast('AI hiccup — using a backup line', false);
+      setAiStatus('');
+      fallbackToStaticFact(target);
+    }
+  }
+
+  async function callClaudeForLine(honoree, apiKey) {
+    const profiles = {
+      Ryan: 'Ryan, turning 43, VP of IT. Loves Hitchhiker\'s Guide to the Galaxy (the answer was 42, now he is 43). Personality: dry humor, tech-savvy, leads his IT team well. Married, beloved at work.',
+      Irene: 'Irene, Taiwanese, mother of Emily. Thoughtful, talented, an excellent cook and a creative maker (crafts, sewing, art). Warm and loving. Speaks Mandarin and English.',
+      Emily: 'Emily, Irene\'s daughter, born in the US, fluent in Mandarin and English. HUGE fan of One Piece (Luffy, Strawhats, Going Merry, King of the Pirates, the Grand Line, "the One Piece is real"). Loves anime broadly. Bilingual, bicultural.'
+    };
+
+    const systemPrompt = `You are writing one-line birthday toasts for a triple-birthday party. The recipients are three friends, each with a unique personality. Your one-liner will scroll across an LED matrix in front of party guests, so it must be:
+
+- Between 80 and 140 characters (firm cap: 180).
+- Pure ASCII only — no emoji, no Chinese characters, no smart quotes, no em dashes (use a regular hyphen). Plain English (or English mixed with romanized pinyin/Spanish where it lands naturally).
+- Warm, witty, and specific to the person. Not generic. Reference what makes them them.
+- Funny in a way that lands for everyone in the room, not insider-only. Affectionate, never mean.
+- Single line. No quotation marks. No prefix like "Here's a toast:". Just the line itself.
+
+Vary your style each time — sometimes a play on words, sometimes a sweet observation, sometimes a callback to their interests. Surprise the reader.`;
+
+    const userPrompt = `Write a fresh one-line birthday toast for ${honoree}.
+
+About ${honoree}: ${profiles[honoree]}
+
+Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 200,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${errBody.slice(0, 100)}`);
+    }
+
+    const data = await res.json();
+    const blocks = data.content || [];
+    const textBlock = blocks.find(b => b.type === 'text');
+    return textBlock ? textBlock.text.trim() : null;
+  }
+
+  function sanitizeForMatrix(text) {
+    let out = text
+      .replace(/^["'`]|["'`]$/g, '')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014]/g, '-')
+      .replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
+      .replace(/[\u{1F000}-\u{1F2FF}]/gu, '')
+      .replace(/[\u{2600}-\u{27BF}]/gu, '')
+      .replace(/[\u4e00-\u9fff]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (out.length > 180) out = out.slice(0, 177) + '...';
+    return out;
+  }
+
+  function fallbackToStaticFact(honoree) {
+    const data = PARTY.facts[honoree];
+    if (!data) return;
+    const line = data.lines[Math.floor(Math.random() * data.lines.length)];
+    runCommands([
+      { kind: 'effect', name: 'sparkle', color: data.color, speed: 180, brightness: 180 },
+      { kind: 'text', text: line, color: data.color, speed: 215 }
+    ], `${honoree} (offline)`, 'party');
+  }
+
+  function saveAnthropicKey() {
+    const v = document.getElementById('anthropicKey').value.trim();
+    if (!v) {
+      localStorage.removeItem('anthropicApiKey');
+      toast('Anthropic key cleared');
+      return;
+    }
+    if (!v.startsWith('sk-ant-')) {
+      toast('That doesn\'t look like an Anthropic key', true);
+      return;
+    }
+    localStorage.setItem('anthropicApiKey', v);
+    toast('Anthropic key saved (this browser only)');
+  }
+
+  function setAiStatus(msg) {
+    const el = document.getElementById('aiStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  function hideAiStatus() { setAiStatus(''); }
+
+  function showAiHint() {
+    toast('Open the WrangLED tab → paste your Anthropic key in settings', true);
   }
 
   /* ============================================================
@@ -1320,8 +1510,13 @@
     document.getElementById('wishText').oninput = updateCharCount;
     document.getElementById('wishText').onkeydown = e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendWish(); };
 
+    // Fill settings
+    document.getElementById('apiUrl').value = apiUrl;
+    document.getElementById('anthropicKey').value = localStorage.getItem('anthropicApiKey') || '';
+
     renderSwatches(); renderEffects(); renderPresets(); renderMoods();
     renderHonorees(); renderReactions(); renderLanguages(); renderFunFacts();
+    renderAiGenButtons();
     renderWishHistory();
     pingApi();
   });
